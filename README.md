@@ -132,7 +132,7 @@ Das Dashboard liest alles aus Home Assistant. Damit die Werte dort ankommen:
 | Was | Wie |
 |---|---|
 | **Synology NAS** | Integration **Synology DSM** (Einstellungen → Geräte & Dienste). Legt in DSM dafür einen eigenen Benutzer an. Sie liefert Speicher-Belegung, CPU, RAM, Temperatur, Festplatten und den Sicherheitsstatus. Die Entity-IDs prüfst du unter Entitäten und trägst sie in `homelab.nas` ein. |
-| **Hypervisoren** | Auf jedem Host **Glances** installieren und die Home-Assistant-Integration **Glances** hinzufügen. Das funktioniert auf jedem Linux-Host (Proxmox, KVM). Für die Anzahl laufender VMs gibt es für Proxmox die HACS-Integration „Proxmox VE“. Ohne VM-Zahl lässt du `vms` einfach weg. |
+| **Proxmox** | Über HACS die Integration **Proxmox VE** hinzufügen (Zugang per API-Token mit Leserechten). Bei einem Cluster reicht ein Knoten, sie zeigt alle. Sie liefert pro Knoten CPU, RAM und Laufzeit, sowie VMs und Container. Alternativ **Glances** auf jedem Host mit der Home-Assistant-Integration **Glances**. Die genauen Entity-IDs findest du unter Einstellungen → Entitäten und trägst sie in `homelab.servers` ein. Gibt es keinen Sensor für die Zahl der laufenden VMs, lässt du `vms` weg. |
 | **Dienste** | **Uptime Kuma** (HACS-Integration) oder einfache **Ping**- und **HTTP**-Sensoren in Home Assistant. `on` bedeutet „läuft“. |
 | **Backup** | Der Zeitstempel-Sensor des letzten erfolgreichen Backups, z. B. von der Backup-Integration in Home Assistant oder einem eigenen Sensor deines Backup-Jobs. |
 | **USV** | Integration **NUT**. Synology kann selbst als NUT-Server dienen (DSM → Hardware & Energie → USV → Netzwerk-USV-Server aktivieren). |
@@ -147,6 +147,19 @@ Alles, was in Home Assistant als Entity auftaucht, kann das Dashboard anzeigen. 
 - **Roborock, Xiaomi, Ecovacs und andere:** Die offiziellen Integrationen liefern ebenfalls `vacuum.*`. Das Dashboard behandelt sie gleich.
 - **Waschmaschine, Trockner:** Eine Steckdose mit Leistungsmessung als `sensor.*` in `devices` mit `above: 5` (Watt) eintragen.
 - **Beliebige Sensoren:** Wenn du etwas Eigenes anzeigen willst, sag Bescheid oder schau dir `devices` und `controls` an.
+
+## Seiten der Wanddarstellung
+
+Die **Hauptseite** zeigt nur das Wichtigste: Räume mit Temperatur, den Grundriss mit Lampen und Fenstern, höchstens drei Hinweiszeilen (Warnungen zuerst) und unten eine Zeile mit Personen, Wetter und dem, was gerade läuft. Alles andere wechselt automatisch durch:
+
+| Seite | Inhalt |
+|---|---|
+| Hauptseite | Räume, Grundriss, wichtigste Hinweise |
+| Ruhige Ansicht | Große Uhr, Wetter, Vorschau, Termin, Müll |
+| Übersicht | Alle Hinweise, Heute-Kacheln, Anwesenheit, Wetter-Vorschau, Läuft gerade, Netzwerk, System, Aktivität |
+| Homelab | Hypervisoren, NAS, Dienste, Backup, USV |
+
+Die Dauer steht in `pages` (`mainSec`, `ambientSec`, `infoSec`, `labSec`, jeweils Sekunden, `0` blendet eine Seite aus). Mit `P` springst du zur nächsten Seite. Auf Handy und Tablet bleibt alles auf einer Seite.
 
 ## Tag-/Nacht-Design
 

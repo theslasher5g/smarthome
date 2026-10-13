@@ -196,6 +196,29 @@
   .ambient .chips{margin:0}
   @media (max-width:900px){.ambient{display:none}}
 
+  /* ---------- Wand-Layout: Hauptseite nur mit dem Wichtigsten ---------- */
+  .foot{display:none}
+  body.wall .app{grid-template-rows:auto minmax(0,1fr) auto}
+  body.wall main{grid-template-columns:minmax(280px,.62fr) minmax(0,1.7fr)}
+  body.wall .col:empty{display:none}
+  body.wall .foot{display:flex;align-items:center;gap:clamp(14px,2.4vw,40px);padding:2px 6px;font-size:clamp(13px,1.15vw,16px);color:var(--muted);min-height:26px}
+  .foot .fg{display:flex;align-items:center;gap:14px;min-width:0}
+  .foot .fp{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+  .foot .fp i{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .foot .fp.home{color:var(--text)} .foot .fp.home i{background:var(--ok);box-shadow:0 0 0 3px var(--ok-soft)}
+  .foot .fw{display:inline-flex;align-items:center;gap:8px;white-space:nowrap;color:var(--text)}
+  .foot .fw svg{width:20px;height:20px;color:var(--accent)} .foot .fw span{color:var(--muted)}
+  .foot .fn{margin-left:auto;display:inline-flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .foot .fn svg{width:16px;height:16px;color:var(--accent);flex:none}
+  body.wall .plan-card{flex:1}
+  .chip.more{background:transparent;border-style:dashed}
+
+  /* ---------- Übersichts-Seite ---------- */
+  .infopg{justify-content:flex-start;gap:clamp(12px,2vh,22px);padding:clamp(20px,3vw,52px)}
+  .infopg .chips{margin:0}
+  .info-cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,1.4vw,20px);flex:1;min-height:0}
+  .info-cols .col{min-height:0}
+
   /* ---------- Homelab-Seite ---------- */
   .lab{justify-content:flex-start;gap:clamp(12px,2.2vh,26px);padding:clamp(20px,3vw,52px)}
   .lab-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
@@ -373,6 +396,13 @@
       </section>
     </div>
   </main>
+  <footer class="foot" id="foot"></footer>
+</div>
+
+<div class="ambient infopg" id="infopg">
+  <div class="lab-head"><h2>Übersicht</h2></div>
+  <div class="chips" id="infochips"></div>
+  <div class="info-cols"><div class="col"></div><div class="col"></div><div class="col"></div></div>
 </div>
 
 <div class="ambient" id="ambient">
@@ -522,7 +552,7 @@
 
     // SEITEN-WECHSEL: Die Hauptseite wechselt automatisch mit einer ruhigen Ansicht (große Uhr, Wetter, Termine).
     // Bei Alarm, Klingel, gedimmtem Bildschirm oder veralteten Daten bleibt die Hauptseite.
-    pages: { enabled: true, mainSec: 45, ambientSec: 15, labSec: 15 },
+    pages: { enabled: true, mainSec: 45, ambientSec: 15, infoSec: 15, labSec: 15 },
 
     // STEUERUNG VOM HANDY: Diese Knöpfe erscheinen nur, wenn die Seite auf einem Touch-Gerät
     // (Handy, Tablet) oder mit ?control geöffnet wird, nie am Wand-Display ohne Touch.
@@ -538,15 +568,15 @@
     ],
 
     // HOMELAB: eigene Seite im Seiten-Wechsel mit Hypervisoren, NAS, Diensten, Backup und USV.
-    // Alle Werte kommen aus Home Assistant, egal womit sie dort ankommen. Für Linux-Hypervisoren (Proxmox, KVM)
-    // passt die Glances-Integration auf jedem Host, für das Synology die Integration "Synology DSM".
+    // Alle Werte kommen aus Home Assistant, egal womit sie dort ankommen. Für Proxmox die Integration "Proxmox VE" (HACS)
+    // oder Glances auf jedem Host, für das Synology die Integration "Synology DSM".
     // Fehlt ein Feld, wird es einfach nicht angezeigt. Bei Problemen erscheint eine rote Zeile auf der Hauptseite.
     homelab: {
       enabled: true,
       servers: [
-        { name: 'Hypervisor 1', status: '', cpu: 'sensor.hv1_cpu_used', ram: 'sensor.hv1_memory_use_percent', temp: 'sensor.hv1_cpu_temperature', uptime: 'sensor.hv1_uptime', vms: 'sensor.hv1_vms_running' },
-        { name: 'Hypervisor 2', status: '', cpu: 'sensor.hv2_cpu_used', ram: 'sensor.hv2_memory_use_percent', temp: 'sensor.hv2_cpu_temperature', uptime: 'sensor.hv2_uptime', vms: 'sensor.hv2_vms_running' },
-        { name: 'Hypervisor 3', status: '', cpu: 'sensor.hv3_cpu_used', ram: 'sensor.hv3_memory_use_percent', temp: 'sensor.hv3_cpu_temperature', uptime: 'sensor.hv3_uptime', vms: 'sensor.hv3_vms_running' }
+        { name: 'pve1', status: '', cpu: 'sensor.hv1_cpu_used', ram: 'sensor.hv1_memory_use_percent', temp: 'sensor.hv1_cpu_temperature', uptime: 'sensor.hv1_uptime', vms: 'sensor.hv1_vms_running' },
+        { name: 'pve2', status: '', cpu: 'sensor.hv2_cpu_used', ram: 'sensor.hv2_memory_use_percent', temp: 'sensor.hv2_cpu_temperature', uptime: 'sensor.hv2_uptime', vms: 'sensor.hv2_vms_running' },
+        { name: 'pve3', status: '', cpu: 'sensor.hv3_cpu_used', ram: 'sensor.hv3_memory_use_percent', temp: 'sensor.hv3_cpu_temperature', uptime: 'sensor.hv3_uptime', vms: 'sensor.hv3_vms_running' }
       ],
       // Synology: total = Gesamtgröße in TB. usedPct = Belegung in %, oder used = belegter Platz (Einheit wird erkannt).
       // alert = Entity, bei der "on" ein Problem bedeutet (z. B. der Sicherheitsstatus von DSM).
@@ -1330,17 +1360,27 @@
   }
 
   /* ---------- Seiten-Wechsel: ruhige Ansicht ---------- */
-  const PG = Object.assign({enabled:true, mainSec:45, ambientSec:15, labSec:15}, CONFIG.pages || {});
+  const PG = Object.assign({enabled:true, mainSec:45, ambientSec:15, infoSec:15, labSec:15}, CONFIG.pages || {});
+  // Wand-Layout: Auf dem Display bleiben nur Räume und Grundriss auf der Hauptseite. Alles andere zieht auf die Übersichts-Seite um.
+  const WALL = !CTRL_MODE && innerWidth >= 1000;
+  if (WALL){
+    document.body.classList.add('wall');
+    const cols = document.querySelectorAll('#infopg .info-cols .col');
+    cols[0].append($('info').closest('section'), $('peoplecard'));
+    cols[1].append($('fccard'), $('nowcard'));
+    cols[2].append($('nc').closest('section'), $('syscard'), $('log').closest('section'));
+    document.querySelectorAll('main > .col').forEach(c => { if (!c.children.length) c.remove(); });
+  }
   const ambEl = $('ambient');
-  const PAGES = ['main'].concat(PG.ambientSec > 0 ? ['ambient'] : [], labOn && PG.labSec > 0 ? ['lab'] : []);
-  const pageEls = {ambient:ambEl, lab:$('lab')};
+  const PAGES = ['main'].concat(PG.ambientSec > 0 ? ['ambient'] : [], WALL && PG.infoSec > 0 ? ['info'] : [], labOn && PG.labSec > 0 ? ['lab'] : []);
+  const pageEls = {ambient:ambEl, info:$('infopg'), lab:$('lab')};
   let pageIdx = 0, pageSince = Date.now();
   function renderPage(){ const pg = PAGES[pageIdx]; if (pg === 'ambient') renderAmbient(); if (pg === 'lab') renderLab(); }
   function setPage(i){
     pageIdx = i % PAGES.length; pageSince = Date.now();
     Object.keys(pageEls).forEach(k => pageEls[k].classList.toggle('show', PAGES[pageIdx] === k)); renderPage();
   }
-  const pageSec = () => { const pg = PAGES[pageIdx]; return pg === 'main' ? PG.mainSec : pg === 'ambient' ? PG.ambientSec : PG.labSec; };
+  const pageSec = () => { const pg = PAGES[pageIdx]; return pg === 'main' ? PG.mainSec : pg === 'ambient' ? PG.ambientSec : pg === 'info' ? PG.infoSec : PG.labSec; };
   function renderAmbient(){
     const d = new Date();
     $('ambtime').textContent = p2(d.getHours()) + ':' + p2(d.getMinutes());
@@ -1417,12 +1457,29 @@
     const lb = lowBatteries(); if (lb.length) out.push(['win open', IC.batt, 'Batterie schwach: ' + names(lb.map(x => x.name + ' (' + x.txt + ')'), 3)]);
     return out;
   }
+  const chipPrio = c => c.indexOf('warn') >= 0 ? 0 : c === 'win open' ? 1 : c === 'vent' ? 2 : c.indexOf('lamp') === 0 ? 4 : 3;
   function renderChips(){
-    const specs = chipSpecs(), sig = JSON.stringify(specs);
+    const specs = chipSpecs().map((x, i) => ({x, i})).sort((a, b) => chipPrio(a.x[0]) - chipPrio(b.x[0]) || a.i - b.i).map(o => o.x), sig = JSON.stringify(specs);
     if (sig === chipSig) return; chipSig = sig;
+    const cap = WALL ? 3 : 99, shown = specs.slice(0, cap), more = specs.length - shown.length;
     chipsEl.textContent = '';
-    specs.forEach(sp => chipsEl.appendChild(mkChip(sp[0], sp[1], sp[2])));
+    shown.forEach(sp => chipsEl.appendChild(mkChip(sp[0], sp[1], sp[2])));
+    if (more > 0) chipsEl.appendChild(mkChip('more', '', '+' + more + ' weitere (siehe Übersicht)'));
     chipsEl.style.display = specs.length ? '' : 'none';
+    const ic = $('infochips'); ic.textContent = ''; specs.forEach(sp => ic.appendChild(mkChip(sp[0], sp[1], sp[2])));
+  }
+  /* Fußzeile der Hauptseite: Personen, Wetter, was gerade läuft */
+  let footSig = '', nowItems = [];
+  function renderFoot(){
+    if (!WALL) return;
+    const foot = $('foot'), a = WX.entity ? (attrs[WX.entity] || {}) : {}, c = WX.entity ? String(values[WX.entity] || '') : '';
+    const soon = rainSoon(), np = nowItems[0];
+    const data = {p: PEOPLE.map(pp => [pp.name, pState(pp) === 'home']), w: c ? [c, a.temperature, soon] : null, n: np ? [np.k, np.title || np.name, np.sub || np.val || '', np.st] : null};
+    const sig = JSON.stringify(data); if (sig === footSig) return; footSig = sig;
+    foot.textContent = '';
+    if (data.p.length){ const g = lel('div', 'fg'); data.p.forEach(pp => { const e = lel('span', 'fp' + (pp[1] ? ' home' : '')); e.append(lel('i'), document.createTextNode(pp[0])); g.appendChild(e); }); foot.appendChild(g); }
+    if (data.w){ const w = lel('div', 'fw'); w.innerHTML = condSvg(c, false); w.append(document.createTextNode(a.temperature != null ? Math.round(a.temperature) + '° ' + (COND[c] || c) : (COND[c] || c))); if (soon) w.appendChild(lel('span', '', '· Regen ' + soon)); foot.appendChild(w); }
+    if (data.n){ const n = lel('div', 'fn'); n.innerHTML = IC.note; n.append(document.createTextNode(np.k === 'm' ? np.title + (np.sub ? ' · ' + np.sub : '') : np.name + ' ' + np.val)); foot.appendChild(n); }
   }
   function devRunning(d){
     const v = values[d.entity]; if (v == null) return null;
@@ -1436,7 +1493,7 @@
   function renderNow(){
     const card = $('nowcard');
     if (!MEDIA.length && !DEVS.length){ card.style.display = 'none'; return; }
-    const items = [];
+    const items = []; nowItems = items;
     MEDIA.forEach(m => {
       const st = values[m.entity]; if (st !== 'playing' && st !== 'paused') return;
       const a = attrs[m.entity] || {};
@@ -1498,7 +1555,7 @@
     });
     LAMPS.forEach(l => { if (isOn(l.entity) && l.plan && ROOMS[l.plan]){ const e = planVals[l.plan] || (planVals[l.plan] = {t:null}); e.light = true; } });
     activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
-    checkWindowWarn(); checkAway(); checkBattery(); checkGarbage(); checkVacuum(); checkLab(); updateCtl(); renderPeople(); renderForecast(); renderChips(); renderNow();
+    checkWindowWarn(); checkAway(); checkBattery(); checkGarbage(); checkVacuum(); checkLab(); updateCtl(); renderPeople(); renderForecast(); renderChips(); renderNow(); renderFoot();
   }
   render(); setInterval(render, 1000);
 
