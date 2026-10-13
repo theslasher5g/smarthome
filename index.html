@@ -405,7 +405,11 @@
     // BILDSCHIRM DIMMEN: wird es dunkel (siehe theme) und gibt es afterMin Minuten keine Bewegung
     // (Bewegungsmelder aus "rooms") und keine Berührung, wird das Display abgedunkelt. level: 0 bis 1.
     // Bewegung, Alarm, Klingel oder Berühren machen es sofort wieder hell. Auch wenn alle unterwegs sind.
-    dim: { enabled: true, afterMin: 5, level: 0.82, onlyNight: true },
+    dim: { enabled: true, afterMin: 5, level: 0.82, onlyNight: true,
+           // DISPLAY AUS: Sind alle (siehe people) länger als awayMin Minuten unterwegs und gibt es keine Bewegung,
+           // schaltet pi-stats.py den Bildschirm am Pi wirklich aus. Kommt jemand heim, bewegt sich etwas,
+           // gibt es einen Alarm oder klingelt es, geht er sofort wieder an.
+           screenOff: { enabled: true, awayMin: 10, url: 'http://localhost:8765/display' } },
 
     // LÄUFT GERADE: Musik- und Videoplayer (media_player.*) mit Titel und Cover.
     // x/y/plan sind optional und zeigen ein Notensymbol im Grundriss, solange etwas spielt.
@@ -900,15 +904,27 @@
 
   /* ---------- Bildschirm dimmen ---------- */
   const DIM = Object.assign({enabled:true, afterMin:5, level:.82, onlyNight:true}, CONFIG.dim || {});
+  const SO = Object.assign({enabled:false, awayMin:10, url:'http://localhost:8765/display'}, DIM.screenOff || {});
+  let screenOff = false, awaySince = 0;
+  function setScreen(on){
+    if (!SO.enabled || screenOff === !on) return;
+    screenOff = !on; push(on ? 'Display an' : 'Display aus (alle unterwegs)');
+    fetch(SO.url + '?state=' + (on ? 'on' : 'off'), {cache:'no-store'}).catch(() => push('Display-Steuerung: pi-stats.py nicht erreichbar','w'));
+  }
   const dimEl = $('dim');
   let lastAct = Date.now(), dimmed = false;
-  function wake(){ lastAct = Date.now(); if (dimmed){ dimmed = false; dimEl.style.opacity = 0; } }
+  function wake(){ lastAct = Date.now(); if (screenOff) setScreen(true); if (dimmed){ dimmed = false; dimEl.style.opacity = 0; } }
   ['pointerdown','keydown','touchstart'].forEach(ev => addEventListener(ev, wake, {passive:true}));
   function dimCheck(){
     if (!DIM.enabled) return;
     const night = !DIM.onlyNight || lastDark >= .95, idle = Date.now() - lastAct > DIM.afterMin*60000;
     const quiet = activeAlarms.size === 0 && Date.now() > doorUntil && !WINWARN;
     const want = idle && quiet && (motionIds.size > 0 || PEOPLE.length > 0) && (night || everyoneAway());
+    if (SO.enabled){
+      const away = everyoneAway(); if (away && !awaySince) awaySince = Date.now(); if (!away) awaySince = 0;
+      const off = away && quiet && Date.now() - awaySince > SO.awayMin*60000 && Date.now() - lastAct > SO.awayMin*60000;
+      if (off) setScreen(false); else if (screenOff && !away) setScreen(true);
+    }
     if (want !== dimmed){ dimmed = want; dimEl.style.opacity = want ? DIM.level : 0; }
   }
   setInterval(dimCheck, 5000);
@@ -1108,7 +1124,7 @@
         }
         if (lightIds.has(id) && old !== v && (v === 'on' || v === 'off')) push('Licht ' + (v === 'on' ? 'an' : 'aus') + ': ' + name);
         if (winIds.has(id) && old !== v && old != null){ const op = v === 'on' || v === 'open'; push('Fenster ' + (op ? 'geöffnet' : 'geschlossen') + ': ' + name, op ? 'w' : ''); }
-        if (PEOPLE.some(pp => pp.entity === id) && old !== v && old != null) push(name + (v === 'home' ? ' ist zuhause' : ' ist unterwegs'));
+        if (PEOPLE.some(pp => pp.entity === id) && old !== v && old != null) { push(name + (v === 'home' ? ' ist zuhause' : ' ist unterwegs')); if (v === 'home') wake(); }
         if (mediaIds.has(id) && old !== v && v === 'playing') push('Wiedergabe: ' + name);
         CONFIG.alarms.forEach(a => { if (a.entity === id){ v === (a.on || 'on') ? alarmOn(a) : alarmOff(id); } });
         if (DB.trigger === id){

@@ -3,17 +3,29 @@
 
   http://localhost:8765/stats                    -> CPU, RAM, Disk, Temperatur, Netzwerk, Laufzeit als JSON
   http://localhost:8765/snapshot?entity=camera.x -> aktuelles Kamerabild aus Home Assistant (für die Türklingel)
+  http://localhost:8765/display?state=off|on     -> Bildschirm am Pi aus- oder einschalten (wenn alle unterwegs sind)
+
+Display-Befehle (Standard: X11 mit xset). Je nach System per Umgebungsvariable ändern:
+  DISPLAY_OFF_CMD / DISPLAY_ON_CMD, z. B.
+    Raspberry Pi OS Bookworm (Wayland): wlr-randr --output HDMI-A-1 --off   /   --on
+    Ältere Pi-Systeme:                  vcgencmd display_power 0              /   1
+    Fernseher per HDMI-CEC:             sh -c 'echo "standby 0" | cec-client -s -d 1'  /  'echo "on 0" | ...'
 
 Start:   HA_URL=http://homeassistant.local:8123 HA_TOKEN=dein_token python3 pi-stats.py
 Ohne HA_URL/HA_TOKEN laufen nur die Systemwerte, der Kamera-Snapshot ist dann aus.
 """
-import json, os, shutil, threading, time, urllib.error, urllib.parse, urllib.request
+import json, os, shlex, shutil, subprocess, threading, time, urllib.error, urllib.parse, urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 HA_URL = os.environ.get("HA_URL", "").rstrip("/")
 HA_TOKEN = os.environ.get("HA_TOKEN", "")
 HOST = os.environ.get("STATS_HOST", "127.0.0.1")
 PORT = int(os.environ.get("STATS_PORT", "8765"))
+
+DISPLAY_CMDS = {
+    "off": os.environ.get("DISPLAY_OFF_CMD", "xset dpms force off"),
+    "on": os.environ.get("DISPLAY_ON_CMD", "xset dpms force on"),
+}
 
 stats = {"cpu": 0.0, "ram": 0.0, "disk": 0.0, "temp": None, "load": 0.0, "rx": 0.0, "tx": 0.0, "uptime": 0}
 
@@ -99,6 +111,16 @@ class Handler(BaseHTTPRequestHandler):
                     return self._send(200, r.read(), r.headers.get("Content-Type", "image/jpeg"))
             except (urllib.error.URLError, TimeoutError) as e:
                 return self._send(502, json.dumps({"error": str(e)}).encode())
+        if url.path == "/display":
+            state = urllib.parse.parse_qs(url.query).get("state", [""])[0]
+            if state not in DISPLAY_CMDS:
+                return self._send(400, b'{"error":"state=on oder state=off"}')
+            env = dict(os.environ, DISPLAY=os.environ.get("DISPLAY", ":0"))
+            try:
+                r = subprocess.run(shlex.split(DISPLAY_CMDS[state]), env=env, timeout=10, capture_output=True, text=True)
+                return self._send(200 if r.returncode == 0 else 500, json.dumps({"state": state, "rc": r.returncode, "err": r.stderr[-200:]}).encode())
+            except (OSError, subprocess.TimeoutExpired) as e:
+                return self._send(500, json.dumps({"error": str(e)}).encode())
         self._send(404, b'{"error":"nicht gefunden"}')
 
     def log_message(self, *a):

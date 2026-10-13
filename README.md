@@ -12,6 +12,7 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - **Wetter-Vorschau:** Die nächsten Stunden mit Temperatur und Regenwahrscheinlichkeit. Kündigt sich Regen an, warnt die Fensterwarnung schon vorher („Regen bald“)
 - **Batterie-Warnung:** Findet alle Batterie-Sensoren in Home Assistant selbst und warnt unter 20 %
 - **Lüften-Empfehlung:** Bei hohem CO₂ oder hoher Luftfeuchte, wenn es draußen passt und im Raum kein Fenster offen ist
+- **Display aus bei Abwesenheit:** Sind alle länger als 10 Minuten unterwegs, schaltet der Pi den Bildschirm wirklich aus und bei Heimkehr oder Bewegung wieder an
 - **Bildschirm dimmen:** Nachts ohne Bewegung dunkelt das Display ab und wird bei Bewegung, Alarm, Klingel oder Berührung sofort wieder hell
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
@@ -112,12 +113,36 @@ Zum Ausprobieren hängst du die Uhrzeit an die Adresse an, z. B. `index.html?tim
 | `L` | Lüften-Hinweis testen |
 | `Esc` | Klingel-Anzeige schließen |
 
-## Optional: `pi-stats.py` (Pi-Werte und Klingel-Kamera)
+## Anwesenheit und Display aus
+
+**So erkennt das Dashboard, ob du da bist:** Es liest die `person.*`-Einträge aus Home Assistant (`CONFIG.people`). Eine Person ist `home` oder `not_home`. Home Assistant leitet das vom Handy ab, am besten kombiniert:
+
+1. **Companion-App** (iOS/Android) auf dem Handy installieren, mit Standort-Freigabe „Immer“ und aktivierter Standortermittlung in der App.
+2. In Home Assistant unter **Einstellungen → Personen** der Person das Handy als Gerät zuordnen. Mit einem zweiten Tracker, z. B. dem Router (Fritz!Box) oder dem Handy im WLAN, wird die Erkennung zuverlässiger.
+3. Die Entity-ID (z. B. `person.timo`) in `CONFIG.people` eintragen.
+
+Das Display geht erst aus, wenn **alle** eingetragenen Personen weg sind (Status `unknown` oder `unavailable` zählt nicht als weg). Es muss außerdem die eingestellte Zeit `awayMin` (Standard 10 Minuten) ohne Bewegung und Berührung vergangen sein. Es geht sofort wieder an bei Heimkehr, Bewegung, Alarm, Klingel oder Berührung.
+
+**Einrichtung:**
+
+1. `pi-stats.py` läuft auf dem Pi (siehe unten). Es schaltet den Bildschirm über einen Befehl.
+2. Standard ist `xset dpms force off` (X11). Je nach System setzt du `DISPLAY_OFF_CMD` und `DISPLAY_ON_CMD`:
+
+| System | Aus / An |
+|---|---|
+| Raspberry Pi OS Bookworm (Wayland) | `wlr-randr --output HDMI-A-1 --off` / `--on` (Ausgang mit `wlr-randr` prüfen) |
+| Ältere Pi-Systeme | `vcgencmd display_power 0` / `1` |
+| Fernseher per HDMI-CEC | `sh -c 'echo "standby 0" \| cec-client -s -d 1'` / `... "on 0" ...` |
+
+3. Abschalten kannst du es in `index.html` mit `dim.screenOff.enabled: false`.
+
+## Optional: `pi-stats.py` (Pi-Werte, Klingel-Kamera, Display)
 
 `pi-stats.py` ist ein kleiner Helfer auf dem Pi ohne zusätzliche Pakete. Er liefert:
 
 - CPU, RAM, Temperatur, Disk und Netzwerkverkehr für die Karten **System** und **Netzwerk**
 - das Kamerabild für die **Türklingel**
+- das Ein- und Ausschalten des **Displays** bei Abwesenheit
 
 ```bash
 HA_URL=http://homeassistant.local:8123 HA_TOKEN=dein_token python3 pi-stats.py
@@ -172,6 +197,7 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Kein Klingel-Kamerabild | `pi-stats.py` mit `HA_URL` und `HA_TOKEN` starten, `doorbell.camera` prüfen |
 | Wetter-Vorschau bleibt leer | Die Wetter-Entity muss `weather.get_forecasts` unterstützen (stündlich oder täglich), `weather.entity` muss gesetzt sein |
 | Batterie fehlt in der Warnung | Der Sensor hat keine Geräteklasse `battery`: bei `battery.extra` von Hand eintragen. Wird er ausgeblendet, prüfe `exclude` |
+| Display geht nie aus | Prüfen, ob alle Personen in `people` `not_home` sind, ob `pi-stats.py` läuft und ob der Befehl passt: `curl 'localhost:8765/display?state=off'` |
 | Bildschirm dimmt nie | Es braucht mindestens einen Bewegungsmelder in `rooms` oder eine Person in `people`. Mit `onlyNight: false` dimmt es auch tagsüber |
 | Lüften-Empfehlung fehlt | Bei den Fenstern in `windows` den passenden Raum als `plan` angeben, damit offene Fenster erkannt werden |
 | Keine Regen-Warnung | `weather.entity` muss gesetzt sein, optional `windowWarn.rainSensor` (z. B. ein Regensensor) |
