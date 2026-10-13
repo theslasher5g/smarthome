@@ -196,6 +196,41 @@
   .ambient .chips{margin:0}
   @media (max-width:900px){.ambient{display:none}}
 
+  /* ---------- Homelab-Seite ---------- */
+  .lab{justify-content:flex-start;gap:clamp(12px,2.2vh,26px);padding:clamp(20px,3vw,52px)}
+  .lab-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .lab-head h2{margin:0;font-size:clamp(22px,2.6vw,38px);font-weight:650;letter-spacing:-.02em}
+  .lab .pill{font-size:clamp(13px,1.3vw,18px);padding:8px 16px}
+  .pill.ok{color:var(--ok)} .pill.warnp{background:var(--bad-soft);color:var(--bad);border-color:rgba(255,93,108,.4)}
+  .lab-srv{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:clamp(10px,1.4vw,20px)}
+  .lab-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:clamp(10px,1.4vw,20px);min-height:0}
+  .lab-side{display:flex;flex-direction:column;gap:clamp(10px,1.4vw,20px);min-width:0}
+  .lc{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:clamp(14px,1.6vw,24px);box-shadow:var(--shadow);min-width:0}
+  .lc h3{margin:0 0 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:clamp(14px,1.4vw,19px);font-weight:600}
+  .lc h3 em{font-style:normal;font-size:.8em;font-weight:500;color:var(--muted)}
+  .lc.bad{border-color:rgba(255,93,108,.5)}
+  .sd{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 4px var(--ok-soft);flex:none}
+  .sd.off{background:var(--bad);box-shadow:0 0 0 4px var(--bad-soft)} .sd.unk{background:var(--faint);box-shadow:none}
+  .mb{display:grid;grid-template-columns:44px 1fr 56px;align-items:center;gap:10px;margin-top:9px;font-size:clamp(12px,1.2vw,16px)}
+  .mb span{color:var(--muted)} .mb em{font-style:normal;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+  .mb i{height:7px;border-radius:99px;background:var(--surface3);overflow:hidden;display:block}
+  .mb b{display:block;height:100%;border-radius:99px;background:var(--accent);transition:width .8s ease}
+  .mb.w b{background:var(--warn)} .mb.w em{color:var(--warn)} .mb.r b{background:var(--bad)} .mb.r em{color:var(--bad)}
+  .kv{display:flex;justify-content:space-between;gap:10px;margin-top:10px;font-size:clamp(12px,1.2vw,16px);color:var(--muted)}
+  .kv b{color:var(--text);font-weight:600}
+  .nas-big{font-size:clamp(30px,4vw,60px);font-weight:600;letter-spacing:-.03em;line-height:1}
+  .nas-big small{font-size:.38em;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:8px}
+  .nas-bar{height:clamp(12px,1.6vw,20px);border-radius:99px;background:var(--surface3);overflow:hidden;margin:14px 0 6px}
+  .nas-bar b{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent))}
+  .nas-bar.w b{background:var(--warn)} .nas-bar.r b{background:var(--bad)}
+  .disks{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .dk{padding:6px 11px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:clamp(12px,1.2vw,15px)}
+  .dk b{font-weight:600;margin-left:6px} .dk.w b{color:var(--warn)} .dk.r b{color:var(--bad)}
+  .svc{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+  .svc div{display:flex;align-items:center;gap:9px;font-size:clamp(13px,1.3vw,17px);min-width:0}
+  .svc div span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  @media (max-width:900px){.lab{display:none}}
+
   /* ---------- Display dimmen ---------- */
   .dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity 4s ease}
 
@@ -349,6 +384,11 @@
   <div class="amb-tiles" id="ambtiles"></div>
   <div class="chips" id="ambchips"></div>
 </div>
+<div class="ambient lab" id="lab">
+  <div class="lab-head"><h2>Homelab</h2><span class="pill" id="labpill"></span></div>
+  <div class="lab-srv" id="labsrv"></div>
+  <div class="lab-grid"><div class="lc lab-nas" id="labnas"></div><div class="lab-side"><div class="lc" id="labsvc"></div><div class="lc" id="labmisc"></div></div></div>
+</div>
 <div class="alarmfx" id="alarmfx"></div>
 <div class="dim" id="dim"></div>
 <div class="alarm" id="alarm" role="alert">
@@ -481,8 +521,8 @@
     maintenance: { reloadAt: '03:30', burnIn: true },
 
     // SEITEN-WECHSEL: Die Hauptseite wechselt automatisch mit einer ruhigen Ansicht (große Uhr, Wetter, Termine).
-    // Bei Alarm, Klingel, Fenster-Warnung, gedimmtem Bildschirm oder veralteten Daten bleibt die Hauptseite.
-    pages: { enabled: true, mainSec: 45, ambientSec: 15 },
+    // Bei Alarm, Klingel, gedimmtem Bildschirm oder veralteten Daten bleibt die Hauptseite.
+    pages: { enabled: true, mainSec: 45, ambientSec: 15, labSec: 15 },
 
     // STEUERUNG VOM HANDY: Diese Knöpfe erscheinen nur, wenn die Seite auf einem Touch-Gerät
     // (Handy, Tablet) oder mit ?control geöffnet wird, nie am Wand-Display ohne Touch.
@@ -496,6 +536,41 @@
       { name: 'Haustür',      entity: 'lock.haustuer' },
       { name: 'Saugroboter',  entity: 'vacuum.dreame' }
     ],
+
+    // HOMELAB: eigene Seite im Seiten-Wechsel mit Hypervisoren, NAS, Diensten, Backup und USV.
+    // Alle Werte kommen aus Home Assistant, egal womit sie dort ankommen. Für Linux-Hypervisoren (Proxmox, KVM)
+    // passt die Glances-Integration auf jedem Host, für das Synology die Integration "Synology DSM".
+    // Fehlt ein Feld, wird es einfach nicht angezeigt. Bei Problemen erscheint eine rote Zeile auf der Hauptseite.
+    homelab: {
+      enabled: true,
+      servers: [
+        { name: 'Hypervisor 1', status: '', cpu: 'sensor.hv1_cpu_used', ram: 'sensor.hv1_memory_use_percent', temp: 'sensor.hv1_cpu_temperature', uptime: 'sensor.hv1_uptime', vms: 'sensor.hv1_vms_running' },
+        { name: 'Hypervisor 2', status: '', cpu: 'sensor.hv2_cpu_used', ram: 'sensor.hv2_memory_use_percent', temp: 'sensor.hv2_cpu_temperature', uptime: 'sensor.hv2_uptime', vms: 'sensor.hv2_vms_running' },
+        { name: 'Hypervisor 3', status: '', cpu: 'sensor.hv3_cpu_used', ram: 'sensor.hv3_memory_use_percent', temp: 'sensor.hv3_cpu_temperature', uptime: 'sensor.hv3_uptime', vms: 'sensor.hv3_vms_running' }
+      ],
+      // Synology: total = Gesamtgröße in TB. usedPct = Belegung in %, oder used = belegter Platz (Einheit wird erkannt).
+      // alert = Entity, bei der "on" ein Problem bedeutet (z. B. der Sicherheitsstatus von DSM).
+      nas: { name: 'Synology', total: 32, usedPct: 'sensor.synology_volume_1_volume_used', used: '',
+             cpu: 'sensor.synology_cpu_utilization_total', ram: 'sensor.synology_memory_usage_real', temp: 'sensor.synology_temperature',
+             uptime: '', alert: 'binary_sensor.synology_security_status',
+             disks: [ { name: 'Disk 1', temp: 'sensor.synology_drive_1_temperature' }, { name: 'Disk 2', temp: 'sensor.synology_drive_2_temperature' },
+                      { name: 'Disk 3', temp: 'sensor.synology_drive_3_temperature' }, { name: 'Disk 4', temp: 'sensor.synology_drive_4_temperature' } ] },
+      // Dienste: "on" (oder up, online, running) = läuft. Passt z. B. zu Uptime Kuma, Ping- oder HTTP-Sensoren.
+      services: [
+        { name: 'Jellyfin',   entity: 'binary_sensor.jellyfin_status' },
+        { name: 'Nextcloud',  entity: 'binary_sensor.nextcloud_status' },
+        { name: 'Vaultwarden', entity: 'binary_sensor.vaultwarden_status' },
+        { name: 'Paperless',  entity: 'binary_sensor.paperless_status' },
+        { name: 'Pi-hole',    entity: 'binary_sensor.pihole_status' },
+        { name: 'Router',     entity: 'binary_sensor.router_status' }
+      ],
+      // Backup: Zeitstempel-Sensor des letzten erfolgreichen Backups. Älter als maxAgeH Stunden = Warnung.
+      backup: { entity: 'sensor.backup_last_successful_automatic_backup', maxAgeH: 48 },
+      // USV (NUT-Integration): Akkustand in % und Status ("Online" / "On Battery")
+      ups: { charge: 'sensor.ups_battery_charge', status: 'sensor.ups_status' },
+      // Ab diesen Werten wird gewarnt: CPU %, RAM %, Temperatur °C, NAS-Belegung %, Festplatten-Temperatur °C
+      warn: { cpu: 90, ram: 90, temp: 80, disk: 85, diskTemp: 50 }
+    },
 
     // LÄUFT GERADE: Musik- und Videoplayer (media_player.*) mit Titel und Cover.
     // x/y/plan sind optional und zeigen ein Notensymbol im Grundriss, solange etwas spielt.
@@ -615,7 +690,7 @@
     const k = e.key.toLowerCase();
     if (k === 'f'){ document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(()=>{}); }
     if (k === 't'){ modeIdx = (modeIdx + 1) % MODES.length; applyTheme(true); toast('Design', ['Automatisch (Tag/Nacht)','Immer dunkel','Immer hell'][modeIdx], 2500); }
-    if (k === 'p' && !CTRL_MODE) setAmbient(!ambientOn);
+    if (k === 'p' && !CTRL_MODE) setPage(pageIdx + 1);
     if (k === 'd') showDoorbell();
     if (k === 'a') testAlarm();
     if (k === 'l') toast('Lüften!', 'CO2 1520 ppm im Büro. Bitte Fenster öffnen.', 12000);
@@ -641,6 +716,7 @@
     air:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2M17.7 7.7A2.5 2.5 0 1 1 19.5 12H2"/></svg>',
     cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
     bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+    server:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>',
     user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     batt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 11v2"/></svg>',
     bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.6.5 1 1.2 1 2V17h6v-.9c0-.8.4-1.5 1-2A6.5 6.5 0 0 0 12 2.5z"/></svg>',
@@ -1123,11 +1199,148 @@
       vacErr[d.entity] = err; });
   }
 
+  /* ---------- Homelab ---------- */
+  const LAB = Object.assign({enabled:false, servers:[], services:[]}, CONFIG.homelab || {});
+  const LW = Object.assign({cpu:90, ram:90, temp:80, disk:85, diskTemp:50}, LAB.warn || {});
+  const labOn = !!(LAB.enabled && (LAB.servers.length || LAB.nas || LAB.services.length));
+  if (labOn){
+    LAB.servers.forEach(sv => ['status','cpu','ram','temp','uptime','vms'].forEach(k => addW(sv[k], sv.name)));
+    if (LAB.nas){ ['usedPct','used','cpu','ram','temp','uptime','alert'].forEach(k => addW(LAB.nas[k], LAB.nas.name)); (LAB.nas.disks || []).forEach(d => { addW(d.temp, d.name); addW(d.alert, d.name); }); }
+    LAB.services.forEach(sv => addW(sv.entity, sv.name));
+    if (LAB.backup) addW(LAB.backup.entity, 'backup');
+    if (LAB.ups){ addW(LAB.ups.charge, 'usv'); addW(LAB.ups.status, 'usv'); }
+  }
+  const lnum = id => { const n = parseFloat(values[id]); return id && isFinite(n) ? n : null; };
+  const lgone = id => !id || values[id] == null || values[id] === 'unavailable' || values[id] === 'unknown';
+  const UPSET = ['on','up','online','running','connected','ok','home','true'];
+  const svcUp = v => UPSET.indexOf(String(v).toLowerCase()) >= 0;
+  // "offline" nur, wenn Home Assistant es ausdrücklich meldet (nicht, solange noch keine Daten da sind)
+  const srvOnline = sv => { if (sv.status){ const v = values[sv.status]; return v == null || svcUp(v); } return !(sv.cpu && values[sv.cpu] === 'unavailable'); };
+  function secsSince(id){
+    const v = values[id]; if (v == null) return null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)){ const t = new Date(v).getTime(); return isFinite(t) ? (Date.now() - t)/1000 : null; }
+    return null;
+  }
+  function uptimeText(id){
+    const v = values[id]; if (!id || v == null) return '–';
+    let sec = secsSince(id);
+    if (sec == null){ const n = parseFloat(v); if (!isFinite(n)) return '–'; const u = String(units[id] || 's').toLowerCase(); sec = u === 'd' ? n*86400 : u === 'h' ? n*3600 : u.indexOf('min') === 0 ? n*60 : n; }
+    const d = Math.floor(sec/86400), h = Math.floor(sec%86400/3600), m = Math.floor(sec%3600/60);
+    return d ? d + ' T ' + h + ' Std' : h ? h + ' Std ' + m + ' Min' : m + ' Min';
+  }
+  function nasUsage(n){
+    const total = n.total || 0; let pct = n.usedPct ? lnum(n.usedPct) : null, tb = null;
+    if (n.used){ const v = lnum(n.used); if (v != null){ const u = String(units[n.used] || '').toLowerCase(); tb = /tb|tib/.test(u) ? v : /gb|gib/.test(u) ? v/1000 : /mb/.test(u) ? v/1e6 : v; } }
+    if (pct == null && tb != null && total) pct = tb/total*100;
+    if (tb == null && pct != null && total) tb = pct*total/100;
+    return {pct, tb, total};
+  }
+  function backupAgeH(){ const b = LAB.backup; if (!b) return null; const s = secsSince(b.entity); return s == null ? null : s/3600; }
+  function upsOnBattery(){ const u = LAB.ups; if (!u) return false; const v = String(values[u.status] || ''); return /\bOB\b|on ?battery|batter/i.test(v) && !/online/i.test(v); }
+  function labProblems(){
+    if (!labOn) return [];
+    const p = [];
+    LAB.servers.forEach(sv => {
+      if (!srvOnline(sv)){ p.push(sv.name + ' offline'); return; }
+      const cpu = lnum(sv.cpu), ram = lnum(sv.ram), t = lnum(sv.temp);
+      if (cpu != null && cpu >= LW.cpu) p.push(sv.name + ' CPU ' + Math.round(cpu) + ' %');
+      if (ram != null && ram >= LW.ram) p.push(sv.name + ' RAM ' + Math.round(ram) + ' %');
+      if (t != null && t >= LW.temp) p.push(sv.name + ' ' + Math.round(t) + ' °C');
+    });
+    const n = LAB.nas;
+    if (n){
+      if (n.cpu && values[n.cpu] === 'unavailable' && (!n.usedPct || values[n.usedPct] === 'unavailable')) p.push(n.name + ' nicht erreichbar');
+      const u = nasUsage(n); if (u.pct != null && u.pct >= LW.disk) p.push(n.name + ' ' + Math.round(u.pct) + ' % voll');
+      if (n.alert && values[n.alert] === 'on') p.push(n.name + ': Warnung');
+      (n.disks || []).forEach(d => { const t = lnum(d.temp); if (t != null && t >= LW.diskTemp) p.push(d.name + ' ' + Math.round(t) + ' °C'); if (d.alert && values[d.alert] === 'on') p.push(d.name + ' Fehler'); });
+    }
+    LAB.services.forEach(sv => { const v = values[sv.entity]; if (v != null && !svcUp(v)) p.push(sv.name + ' nicht erreichbar'); });
+    const age = backupAgeH(); if (age != null && LAB.backup.maxAgeH && age > LAB.backup.maxAgeH) p.push('Backup ' + (age >= 48 ? Math.round(age/24) + ' Tage' : Math.round(age) + ' Std') + ' alt');
+    if (upsOnBattery()) p.push('USV läuft auf Akku');
+    else if (LAB.ups && lnum(LAB.ups.charge) != null && lnum(LAB.ups.charge) < 30) p.push('USV-Akku ' + Math.round(lnum(LAB.ups.charge)) + ' %');
+    return p;
+  }
+  let labKey = '';
+  function checkLab(){
+    const p = labProblems(), key = p.join('|');
+    if (key && key !== labKey) toast('Homelab', names(p,4) + '.', 20000, 'bad');
+    if (key !== labKey && key) push('Homelab: ' + names(p,3), 'a');
+    labKey = key;
+  }
+  function lel(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function metric(label, pct, warnAt, text){
+    const m = lel('div', 'mb' + (pct != null && pct >= warnAt + 5 ? ' r' : pct != null && pct >= warnAt ? ' w' : ''));
+    const bar = lel('i'), b = lel('b'); b.style.width = pct == null ? '0' : Math.max(2, Math.min(100, pct)) + '%'; bar.appendChild(b);
+    m.append(lel('span', '', label), bar, lel('em', '', pct == null ? '–' : text)); return m;
+  }
+  function renderLab(){
+    if (!labOn) return;
+    const probs = labProblems(), pill = $('labpill');
+    pill.className = 'pill ' + (probs.length ? 'warnp' : 'ok'); pill.textContent = probs.length ? probs.length + (probs.length === 1 ? ' Problem' : ' Probleme') : 'Alles in Ordnung';
+    const srv = $('labsrv'); srv.textContent = '';
+    LAB.servers.forEach(sv => {
+      const on = srvOnline(sv), card = lel('div', 'lc' + (on ? '' : ' bad'));
+      const h = lel('h3'); h.append(lel('span', '', sv.name)); const st = lel('span', 'sd' + (on ? '' : ' off')); h.appendChild(st); card.appendChild(h);
+      const cpu = lnum(sv.cpu), ram = lnum(sv.ram), t = lnum(sv.temp);
+      card.append(metric('CPU', cpu, LW.cpu - 5, Math.round(cpu) + ' %'), metric('RAM', ram, LW.ram - 5, Math.round(ram) + ' %'));
+      if (sv.temp) card.appendChild(metric('Temp', t == null ? null : Math.min(100, t), LW.temp - 5, Math.round(t) + ' °C'));
+      if (sv.vms){ const k = lel('div', 'kv'); k.append(lel('span', '', 'VMs laufen'), lel('b', '', values[sv.vms] != null ? values[sv.vms] : '–')); card.appendChild(k); }
+      if (sv.uptime){ const k = lel('div', 'kv'); k.append(lel('span', '', 'Laufzeit'), lel('b', '', on ? uptimeText(sv.uptime) : 'offline')); card.appendChild(k); }
+      srv.appendChild(card);
+    });
+    srv.style.display = LAB.servers.length ? '' : 'none';
+    const nasEl = $('labnas'); nasEl.textContent = ''; nasEl.style.display = LAB.nas ? '' : 'none';
+    if (LAB.nas){
+      const n = LAB.nas, u = nasUsage(n), cls = u.pct != null && u.pct >= LW.disk ? ' r' : u.pct != null && u.pct >= LW.disk - 10 ? ' w' : '';
+      const h = lel('h3'); h.append(lel('span', '', n.name + ' · Speicher'), lel('em', '', n.total ? n.total + ' TB gesamt' : '')); nasEl.appendChild(h);
+      const big = lel('div', 'nas-big', u.tb != null ? u.tb.toFixed(1).replace('.', ',') : '–'); big.appendChild(lel('small', '', 'TB belegt' + (u.pct != null ? ' · ' + Math.round(u.pct) + ' %' : ''))); nasEl.appendChild(big);
+      const bar = lel('div', 'nas-bar' + cls), b = lel('b'); b.style.width = (u.pct == null ? 0 : Math.max(1, Math.min(100, u.pct))) + '%'; bar.appendChild(b); nasEl.appendChild(bar);
+      if (u.tb != null && u.total){ const k = lel('div', 'kv'); k.append(lel('span', '', 'Frei'), lel('b', '', Math.max(0, u.total - u.tb).toFixed(1).replace('.', ',') + ' TB')); nasEl.appendChild(k); }
+      const cpu = lnum(n.cpu), ram = lnum(n.ram), t = lnum(n.temp);
+      if (n.cpu) nasEl.appendChild(metric('CPU', cpu, LW.cpu - 5, Math.round(cpu) + ' %'));
+      if (n.ram) nasEl.appendChild(metric('RAM', ram, LW.ram - 5, Math.round(ram) + ' %'));
+      if (n.temp) nasEl.appendChild(metric('Temp', t == null ? null : Math.min(100, t), LW.temp - 5, Math.round(t) + ' °C'));
+      if (n.uptime){ const k = lel('div', 'kv'); k.append(lel('span', '', 'Laufzeit'), lel('b', '', uptimeText(n.uptime))); nasEl.appendChild(k); }
+      if ((n.disks || []).length){
+        const dw = lel('div', 'disks');
+        n.disks.forEach(d => { const t2 = lnum(d.temp), bad = (d.alert && values[d.alert] === 'on') || (t2 != null && t2 >= LW.diskTemp + 5), w = t2 != null && t2 >= LW.diskTemp;
+          const e = lel('div', 'dk' + (bad ? ' r' : w ? ' w' : '')); e.append(lel('span', '', d.name), lel('b', '', t2 != null ? Math.round(t2) + ' °C' : (d.alert && values[d.alert] === 'on' ? 'Fehler' : 'OK'))); dw.appendChild(e); });
+        nasEl.appendChild(dw);
+      }
+    }
+    const sv = $('labsvc'); sv.textContent = ''; sv.style.display = LAB.services.length ? '' : 'none';
+    if (LAB.services.length){
+      const up = LAB.services.filter(x => values[x.entity] != null && svcUp(values[x.entity])).length;
+      const h = lel('h3'); h.append(lel('span', '', 'Dienste'), lel('em', '', up + ' von ' + LAB.services.length + ' laufen')); sv.appendChild(h);
+      const g = lel('div', 'svc');
+      LAB.services.forEach(x => { const v = values[x.entity], row = lel('div'); row.append(lel('span', 'sd' + (v == null ? ' unk' : svcUp(v) ? '' : ' off')), lel('span', '', x.name)); g.appendChild(row); });
+      sv.appendChild(g);
+    }
+    const mi = $('labmisc'); mi.textContent = ''; mi.style.display = (LAB.backup || LAB.ups) ? '' : 'none';
+    if (LAB.backup){
+      const age = backupAgeH(), old = age != null && LAB.backup.maxAgeH && age > LAB.backup.maxAgeH;
+      const k = lel('div', 'kv'); k.style.marginTop = '0'; k.append(lel('span', '', 'Letztes Backup'), lel('b', '', age == null ? '–' : age < 1 ? 'vor ' + Math.round(age*60) + ' Min' : age < 48 ? 'vor ' + Math.round(age) + ' Std' : 'vor ' + Math.round(age/24) + ' Tagen'));
+      if (old) k.lastChild.style.color = 'var(--bad)'; mi.appendChild(k);
+    }
+    if (LAB.ups){
+      const c = lnum(LAB.ups.charge), ob = upsOnBattery();
+      const k = lel('div', 'kv'); k.append(lel('span', '', 'USV'), lel('b', '', ob ? 'läuft auf Akku' + (c != null ? ' · ' + Math.round(c) + ' %' : '') : (c != null ? 'Netz · Akku ' + Math.round(c) + ' %' : '–')));
+      if (ob) k.lastChild.style.color = 'var(--bad)'; mi.appendChild(k);
+    }
+  }
+
   /* ---------- Seiten-Wechsel: ruhige Ansicht ---------- */
-  const PG = Object.assign({enabled:true, mainSec:45, ambientSec:15}, CONFIG.pages || {});
+  const PG = Object.assign({enabled:true, mainSec:45, ambientSec:15, labSec:15}, CONFIG.pages || {});
   const ambEl = $('ambient');
-  let ambientOn = false, pageSince = Date.now();
-  function setAmbient(on){ ambientOn = on; ambEl.classList.toggle('show', on); pageSince = Date.now(); if (on) renderAmbient(); }
+  const PAGES = ['main'].concat(PG.ambientSec > 0 ? ['ambient'] : [], labOn && PG.labSec > 0 ? ['lab'] : []);
+  const pageEls = {ambient:ambEl, lab:$('lab')};
+  let pageIdx = 0, pageSince = Date.now();
+  function renderPage(){ const pg = PAGES[pageIdx]; if (pg === 'ambient') renderAmbient(); if (pg === 'lab') renderLab(); }
+  function setPage(i){
+    pageIdx = i % PAGES.length; pageSince = Date.now();
+    Object.keys(pageEls).forEach(k => pageEls[k].classList.toggle('show', PAGES[pageIdx] === k)); renderPage();
+  }
+  const pageSec = () => { const pg = PAGES[pageIdx]; return pg === 'main' ? PG.mainSec : pg === 'ambient' ? PG.ambientSec : PG.labSec; };
   function renderAmbient(){
     const d = new Date();
     $('ambtime').textContent = p2(d.getHours()) + ':' + p2(d.getMinutes());
@@ -1155,10 +1368,10 @@
   }
   function pageTick(){
     if (!PG.enabled || CTRL_MODE) return;
-    const busy = activeAlarms.size > 0 || Date.now() < doorUntil || WINWARN || dimmed || screenOff || document.body.classList.contains('stale');
-    if (busy){ if (ambientOn) setAmbient(false); return; }
-    if (ambientOn) renderAmbient();
-    if (Date.now() - pageSince > (ambientOn ? PG.ambientSec : PG.mainSec)*1000) setAmbient(!ambientOn);
+    const busy = activeAlarms.size > 0 || Date.now() < doorUntil || dimmed || screenOff || document.body.classList.contains('stale');
+    if (busy){ if (pageIdx) setPage(0); return; }
+    if (pageIdx) renderPage();
+    if (Date.now() - pageSince > pageSec()*1000) setPage(pageIdx + 1);
   }
   setInterval(pageTick, 1000);
 
@@ -1199,6 +1412,7 @@
       const l = names(v.list.map(x => x.name + ' (' + x.why + ')'), 2);
       out.push(v.ok ? ['vent', IC.air, 'Lüften empfohlen: ' + l] : ['win open', IC.air, 'Luft schlecht: ' + l + ' – draußen ' + (v.rainy ? 'Regen' : Math.round(v.out) + ' °C') + ', nur kurz lüften']);
     }
+    const lp = labProblems(); if (lp.length) out.push(['win warn', IC.server, 'Homelab: ' + names(lp,3)]);
     const gt = garbageTomorrow(); if (gt) out.push(['win open', IC.bin, 'Morgen Müll: ' + gt.join(', ')]);
     const lb = lowBatteries(); if (lb.length) out.push(['win open', IC.batt, 'Batterie schwach: ' + names(lb.map(x => x.name + ' (' + x.txt + ')'), 3)]);
     return out;
@@ -1284,7 +1498,7 @@
     });
     LAMPS.forEach(l => { if (isOn(l.entity) && l.plan && ROOMS[l.plan]){ const e = planVals[l.plan] || (planVals[l.plan] = {t:null}); e.light = true; } });
     activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
-    checkWindowWarn(); checkAway(); checkBattery(); checkGarbage(); checkVacuum(); updateCtl(); renderPeople(); renderForecast(); renderChips(); renderNow();
+    checkWindowWarn(); checkAway(); checkBattery(); checkGarbage(); checkVacuum(); checkLab(); updateCtl(); renderPeople(); renderForecast(); renderChips(); renderNow();
   }
   render(); setInterval(render, 1000);
 

@@ -20,6 +20,7 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - **Wartung:** Neustart der Seite jede Nacht und Burn-in-Schutz (Inhalt wandert minimal)
 - **Steuerung vom Handy:** Knöpfe für Licht, Szenen, Skripte, Schloss und Saugroboter (nur auf Touch-Geräten)
 - **Saugroboter:** Zustand und Akku von `vacuum.*`-Geräten (z. B. Dreame) unter „Läuft gerade“, mit Fehlermeldung
+- **Homelab-Seite:** Hypervisoren, Synology-Speicher, Dienste, Backup und USV auf einer eigenen Seite, mit roter Warnzeile auf der Hauptseite bei Problemen
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
 - Luftqualität, Termine, Müllabfuhr, Pi-hole, Netzwerkverkehr und Pi-Systemwerte
@@ -66,6 +67,7 @@ In Home Assistant: **Profil** (unten links) → **Sicherheit** → **Langzeit-Zu
 | `maintenance` | Nächtlicher Neustart (`reloadAt`) und `burnIn` |
 | `pages` | Seiten-Wechsel: `mainSec` Hauptseite, `ambientSec` ruhige Ansicht |
 | `controls` | Knöpfe für die Steuerung vom Handy |
+| `homelab` | Homelab-Seite: `servers`, `nas`, `services`, `backup`, `ups` und `warn` |
 | `media` / `devices` | Musikplayer und Geräte für „Läuft gerade“ |
 | `alarms` | Rauch-, Wasser- und Türmelder |
 | `pihole`, `weather`, `calendars`, `garbage` | Optionale Info-Kacheln |
@@ -121,6 +123,22 @@ Dann öffnest du auf dem Handy `http://<IP-des-Pi>:8080/` (oder `…/?control`).
 
 > **Sicherheit:** Das Token steht in `index.html`. Wer die Datei abrufen kann, hat vollen Zugriff auf dein Home Assistant. Stelle sie deshalb **nur im Heimnetz** bereit, nie ins Internet. Von außen nutzt du besser die Home-Assistant-App.
 
+## Homelab
+
+Die Seite **Homelab** erscheint im Seiten-Wechsel (`pages.labSec`, Standard 15 Sekunden) und mit `P`. Sie zeigt pro Hypervisor CPU, RAM, Temperatur, laufende VMs und Laufzeit, dazu den Speicher des NAS mit Festplatten-Temperaturen, den Status deiner Dienste, das letzte Backup und die USV. **Bei Problemen** (Server offline, CPU/RAM/Temperatur zu hoch, NAS fast voll, Platte zu heiß, Dienst nicht erreichbar, Backup zu alt, Stromausfall) erscheint zusätzlich eine rote Zeile „Homelab: …“ auf der Hauptseite und ein Hinweis. Schwellen stehen in `homelab.warn`.
+
+Das Dashboard liest alles aus Home Assistant. Damit die Werte dort ankommen:
+
+| Was | Wie |
+|---|---|
+| **Synology NAS** | Integration **Synology DSM** (Einstellungen → Geräte & Dienste). Legt in DSM dafür einen eigenen Benutzer an. Sie liefert Speicher-Belegung, CPU, RAM, Temperatur, Festplatten und den Sicherheitsstatus. Die Entity-IDs prüfst du unter Entitäten und trägst sie in `homelab.nas` ein. |
+| **Hypervisoren** | Auf jedem Host **Glances** installieren und die Home-Assistant-Integration **Glances** hinzufügen. Das funktioniert auf jedem Linux-Host (Proxmox, KVM). Für die Anzahl laufender VMs gibt es für Proxmox die HACS-Integration „Proxmox VE“. Ohne VM-Zahl lässt du `vms` einfach weg. |
+| **Dienste** | **Uptime Kuma** (HACS-Integration) oder einfache **Ping**- und **HTTP**-Sensoren in Home Assistant. `on` bedeutet „läuft“. |
+| **Backup** | Der Zeitstempel-Sensor des letzten erfolgreichen Backups, z. B. von der Backup-Integration in Home Assistant oder einem eigenen Sensor deines Backup-Jobs. |
+| **USV** | Integration **NUT**. Synology kann selbst als NUT-Server dienen (DSM → Hardware & Energie → USV → Netzwerk-USV-Server aktivieren). |
+
+Alle Felder sind optional. Was du weglässt, erscheint nicht. Zum Probieren der Anzeige: `P` drücken, bis die Homelab-Seite erscheint.
+
 ## Weitere Geräte (Saugroboter, Waschmaschine, …)
 
 Alles, was in Home Assistant als Entity auftaucht, kann das Dashboard anzeigen. Du brauchst nur die Entity-ID.
@@ -153,7 +171,7 @@ Zum Ausprobieren hängst du die Uhrzeit an die Adresse an, z. B. `index.html?tim
 | `D` | Türklingel testen |
 | `A` | Testalarm |
 | `L` | Lüften-Hinweis testen |
-| `P` | Zwischen Hauptseite und ruhiger Ansicht wechseln |
+| `P` | Nächste Seite: Hauptseite, ruhige Ansicht, Homelab |
 | `Esc` | Klingel-Anzeige schließen |
 
 ## Anwesenheit und Display aus
@@ -242,6 +260,7 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Batterie fehlt in der Warnung | Der Sensor hat keine Geräteklasse `battery`: bei `battery.extra` von Hand eintragen. Wird er ausgeblendet, prüfe `exclude` |
 | „Keine Daten seit …“ | Home Assistant antwortet nicht mehr: Adresse, Netzwerk und Token prüfen. Die Seite verbindet sich selbst neu |
 | Steuerung fehlt am Handy | Die Seite mit `?control` öffnen und prüfen, ob `controls` Einträge hat |
+| Homelab zeigt `–` | Entity-IDs in `homelab` prüfen. Die Seite warnt „offline“ nur, wenn Home Assistant `unavailable` meldet |
 | Display geht nie aus | Prüfen, ob alle Personen in `people` `not_home` sind, ob `pi-stats.py` läuft und ob der Befehl passt: `curl 'localhost:8765/display?state=off'` |
 | Bildschirm dimmt nie | Es braucht mindestens einen Bewegungsmelder in `rooms` oder eine Person in `people`. Mit `onlyNight: false` dimmt es auch tagsüber |
 | Lüften-Empfehlung fehlt | Bei den Fenstern in `windows` den passenden Raum als `plan` angeben, damit offene Fenster erkannt werden |
