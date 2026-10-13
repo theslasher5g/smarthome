@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0a0c11; --bg2:#0f1218;
+    --surface:#141821; --surface2:#1b2030; --surface3:#232a3c;
+    --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.12);
+    --text:#eef1f7; --muted:#8b94a8; --faint:#5b6478;
+    --accent:#7aa7ff; --accent-soft:rgba(122,167,255,.14);
+    --ok:#3ddc97; --ok-soft:rgba(61,220,151,.14);
+    --warn:#ffb84d; --warn-soft:rgba(255,184,77,.14);
+    --bad:#ff5d6c; --bad-soft:rgba(255,93,108,.14);
+    --warm:#ffd37a; --pink:#ff7ab8;
+    --wall:#c9d1e3; --room:#1b2030;
+    --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 12px 32px -16px rgba(0,0,0,.6);
+    --r:20px;
+    --font:"Inter","SF Pro Display",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  }
+  :root[data-theme="light"]{
+    color-scheme:light;
+    --bg:#eef1f6; --bg2:#e6eaf1;
+    --surface:#ffffff; --surface2:#f2f4f9; --surface3:#e7ebf3;
+    --border:rgba(15,23,42,.07); --border2:rgba(15,23,42,.14);
+    --text:#111827; --muted:#5d667a; --faint:#98a1b4;
+    --accent:#2f6bff; --accent-soft:rgba(47,107,255,.10);
+    --ok:#0f9d68; --ok-soft:rgba(15,157,104,.10);
+    --warn:#c77700; --warn-soft:rgba(199,119,0,.11);
+    --bad:#e0354a; --bad-soft:rgba(224,53,74,.10);
+    --warm:#f2b01e; --pink:#d6338a;
+    --wall:#4b556b; --room:#eef1f7;
+    --shadow:0 1px 2px rgba(15,23,42,.05), 0 14px 30px -18px rgba(15,23,42,.22);
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:radial-gradient(1200px 700px at 10% -10%,var(--bg2),var(--bg));color:var(--text);
+    font-family:var(--font);-webkit-font-smoothing:antialiased;font-feature-settings:"tnum" 1,"cv11" 1;overflow:hidden}
+  .app{height:100vh;height:100dvh;padding:clamp(12px,1.6vw,24px);display:grid;grid-template-rows:auto minmax(0,1fr);gap:clamp(12px,1.4vw,20px)}
+
+  /* ---------- Kopf ---------- */
+  header{display:flex;align-items:center;gap:16px;min-width:0}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .logo{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none;
+    background:linear-gradient(135deg,var(--accent),#9b7bff);color:#fff;box-shadow:0 8px 20px -8px var(--accent)}
+  .logo svg{width:22px;height:22px}
+  .brand h1{margin:0;font-size:18px;font-weight:650;letter-spacing:-.01em;line-height:1.15;white-space:nowrap}
+  .brand p{margin:2px 0 0;font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--surface);
+    border:1px solid var(--border);font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .pill i{width:8px;height:8px;border-radius:50%;background:var(--faint);flex:none}
+  .pill.ok i{background:var(--ok);box-shadow:0 0 0 4px var(--ok-soft)}
+  .pill.bad i{background:var(--bad);box-shadow:0 0 0 4px var(--bad-soft)}
+  .pill.ok{color:var(--text)}
+  .clock{text-align:right;line-height:1}
+  #time{font-size:clamp(30px,3.2vw,46px);font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+  #date{margin-top:6px;font-size:13px;color:var(--muted)}
+
+  /* ---------- Raster ---------- */
+  main{display:grid;gap:clamp(12px,1.4vw,20px);min-height:0;
+    grid-template-columns:minmax(260px,.85fr) minmax(0,1.5fr) minmax(280px,.9fr)}
+  .col{display:flex;flex-direction:column;gap:clamp(12px,1.4vw,20px);min-height:0;min-width:0}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);
+    padding:clamp(14px,1.3vw,20px);min-height:0;min-width:0;position:relative;display:flex;flex-direction:column}
+  .card h2{margin:0 0 12px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .card h2 em{font-style:normal;letter-spacing:0;text-transform:none;font-weight:500;font-size:12px;color:var(--faint)}
+  .grow{flex:1;min-height:0}
+
+  /* ---------- Räume ---------- */
+  #rooms{display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0;flex:1;scrollbar-width:none}
+  #rooms::-webkit-scrollbar{display:none}
+  .rm{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:14px 16px;display:grid;
+    grid-template-columns:1fr auto;column-gap:12px;row-gap:6px;align-items:end;transition:border-color .3s,background .3s}
+  .rm.motion{border-color:rgba(255,122,184,.55)}
+  .rm .n{grid-column:1/3;display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+  .rm .nm{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bdw{display:flex;gap:6px;flex:none}
+  .bd{display:none;align-items:center;font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .bd.l{color:var(--warm);background:rgba(255,211,122,.14)}
+  .bd.m{color:var(--pink);background:rgba(255,122,184,.14)}
+  .bd.c0{color:var(--muted);background:var(--surface3)}
+  .bd.c1{color:var(--warn);background:var(--warn-soft)}
+  .bd.c2{color:var(--bad);background:var(--bad-soft)}
+  .rm .t{font-size:clamp(28px,2.6vw,38px);font-weight:600;letter-spacing:-.03em;line-height:1;white-space:nowrap}
+  .rm .h{font-size:16px;font-weight:500;color:var(--muted);white-space:nowrap;padding-bottom:3px}
+  .rm .t.bad,.rm .h.bad{color:var(--bad)}
+  .rm .bar{grid-column:1/3;height:5px;border-radius:99px;background:var(--surface3);overflow:hidden;margin-top:4px}
+  .rm .bar b{display:block;height:100%;width:0;border-radius:99px;background:var(--accent);transition:width .8s ease}
+
+  /* ---------- Grundriss ---------- */
+  .plan-card{flex:1.5}
+  .planbox{position:relative;flex:1;min-height:0}
+  #plan{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block}
+
+  /* ---------- Aktivität ---------- */
+  .log-card{flex:.62}
+  #log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;overflow:hidden;flex:1;min-height:0;justify-content:flex-end}
+  #log li{display:flex;align-items:center;gap:10px;font-size:13px;padding:6px 0;color:var(--text);
+    border-bottom:1px solid var(--border);animation:slide .35s ease both;min-width:0}
+  #log li:last-child{border-bottom:0}
+  #log li i{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
+  #log li.w i{background:var(--warn)} #log li.a i{background:var(--bad)}
+  #log li time{color:var(--faint);font-size:12px;font-variant-numeric:tabular-nums;flex:none}
+  #log li span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  @keyframes slide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  /* ---------- Info-Kacheln ---------- */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{background:var(--surface2);border:1px solid var(--border);border-radius:16px;padding:12px 14px;min-width:0}
+  .tile .k{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--muted);font-weight:500}
+  .tile .k svg{width:14px;height:14px;flex:none}
+  .tile .v{margin-top:8px;font-size:clamp(18px,1.7vw,24px);font-weight:600;letter-spacing:-.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tile .v.w{color:var(--warn)} .tile .v.r{color:var(--bad)}
+  .tile .d{margin-top:3px;font-size:12px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* ---------- Netz / System ---------- */
+  .net-card{flex:1}
+  .stats{display:flex;gap:18px;margin-bottom:10px;font-size:12px;color:var(--muted)}
+  .stats b{display:block;margin-top:2px;font-size:17px;font-weight:600;color:var(--text);letter-spacing:-.01em}
+  .stats .dn b{color:var(--accent)} .stats .up b{color:var(--pink)}
+  #nc{flex:1;min-height:60px;width:100%;display:block}
+  .sys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .sys div{background:var(--surface2);border-radius:12px;padding:9px 10px;text-align:left;min-width:0}
+  .sys span{display:block;font-size:11px;color:var(--muted)}
+  .sys b{display:block;margin-top:3px;font-size:15px;font-weight:600;white-space:nowrap}
+  .sys .bad b{color:var(--bad)}
+
+  /* ---------- Overlays ---------- */
+  .alarm{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-140%);z-index:30;
+    width:min(640px,calc(100vw - 32px));background:var(--bad);color:#fff;border-radius:18px;padding:14px 18px;
+    box-shadow:0 20px 50px -12px rgba(255,60,80,.7);display:flex;gap:14px;align-items:center;
+    opacity:0;visibility:hidden;transition:transform .45s cubic-bezier(.2,.9,.2,1),opacity .3s,visibility .45s}
+  .alarm.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible}
+  .alarm svg{width:30px;height:30px;flex:none}
+  .alarm b{display:block;font-size:17px;letter-spacing:-.01em}
+  .alarm span{font-size:13.5px;opacity:.92}
+  .alarm .items{display:flex;flex-direction:column;gap:6px;min-width:0}
+  .alarmfx{position:fixed;inset:0;pointer-events:none;z-index:25;opacity:0;transition:opacity .4s;
+    box-shadow:inset 0 0 0 4px var(--bad),inset 0 0 90px rgba(255,60,80,.45)}
+  .alarmfx.show{opacity:1;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{opacity:.35}}
+
+  .toasts{position:fixed;right:20px;bottom:20px;z-index:20;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+  .toast{background:var(--surface);border:1px solid var(--border2);border-left:4px solid var(--warn);border-radius:14px;
+    padding:12px 16px;box-shadow:0 20px 40px -16px rgba(0,0,0,.6);max-width:320px;animation:slide .35s ease both}
+  .toast b{display:block;font-size:14px} .toast span{font-size:12.5px;color:var(--muted)}
+
+  .door{position:fixed;inset:0;z-index:28;background:rgba(5,7,10,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+    display:none;align-items:center;justify-content:center;padding:24px}
+  .door.show{display:flex}
+  .door .box{width:min(820px,100%);background:var(--surface);border:1px solid var(--border2);border-radius:24px;overflow:hidden;
+    box-shadow:0 30px 80px -20px rgba(0,0,0,.8);animation:slide .35s ease both}
+  .door header{padding:16px 20px;justify-content:space-between}
+  .door h3{margin:0;font-size:17px;font-weight:600;display:flex;align-items:center;gap:10px}
+  .door .live{width:9px;height:9px;border-radius:50%;background:var(--bad);animation:pulse 1.2s infinite}
+  .door .frame{background:#000;aspect-ratio:16/9;display:grid;place-items:center;color:var(--muted);font-size:14px;position:relative}
+  .door img{width:100%;height:100%;object-fit:contain;display:block}
+  .door .cd{height:4px;background:var(--surface3)} .door .cd b{display:block;height:100%;width:100%;background:var(--accent)}
+
+  @media (max-width:1100px){
+    body{overflow:auto}
+    .app{height:auto;min-height:100dvh;grid-template-rows:auto auto}
+    main{grid-template-columns:1fr 1fr}
+    .col:nth-child(2){grid-column:1/3;order:-1}
+    .planbox{min-height:340px}
+    #log{min-height:150px}
+  }
+  @media (max-width:700px){
+    main{grid-template-columns:1fr}
+    .col:nth-child(2){grid-column:auto}
+    .brand p,.pill.hide-sm{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg></div>
+      <div><h1 id="title">Home</h1><p id="sub">Wohnung</p></div>
+    </div>
+    <div class="spacer"></div>
+    <span class="pill hide-sm" id="ha"><i></i><span>Home Assistant</span></span>
+    <div class="clock"><div id="time">00:00</div><div id="date"></div></div>
+  </header>
+
+  <main>
+    <div class="col">
+      <section class="card grow">
+        <h2>Räume <em id="roomcount"></em></h2>
+        <div id="rooms"></div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card plan-card">
+        <h2><span id="herolbl">Grundriss</span>
+          <span class="legend"><span><i style="background:var(--warm)"></i>Licht</span><span><i style="background:var(--pink)"></i>Bewegung</span><span><i style="background:var(--warn)"></i>Luft</span></span></h2>
+        <div class="planbox"><canvas id="plan"></canvas></div>
+      </section>
+      <section class="card log-card">
+        <h2>Aktivität <em>Live</em></h2>
+        <ul id="log"></ul>
+      </section>
+    </div>
+
+    <div class="col">
+      <section class="card">
+        <h2>Heute</h2>
+        <div class="tiles" id="info"></div>
+      </section>
+      <section class="card net-card">
+        <h2>Netzwerk <em id="nsrc">Simulation</em></h2>
+        <div class="stats">
+          <div class="dn">Download<b id="dn">0</b></div>
+          <div class="up">Upload<b id="up">0</b></div>
+          <div>Spitze<b id="pk">0</b></div>
+        </div>
+        <canvas id="nc"></canvas>
+      </section>
+      <section class="card" id="syscard" style="display:none">
+        <h2>System <em id="sysup"></em></h2>
+        <div class="sys" id="sys"></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="alarmfx" id="alarmfx"></div>
+<div class="alarm" id="alarm" role="alert">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
+  <div class="items" id="alarmitems"></div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div class="door" id="door">
+  <div class="box">
+    <header><h3><i class="live"></i>Es klingelt an der Haustür</h3><span class="pill" id="doortime"></span></header>
+    <div class="frame" id="doorframe"></div>
+    <div class="cd"><b id="doorcd"></b></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  /* =====================================================
+     HIER ANPASSEN
+     ===================================================== */
+  const CONFIG = {
+    // Name oben links (frei wählbar)
+    title: 'Home',
+    subtitle: 'Wohnung',
+
+    // Home Assistant: Adresse (ws:// bei http, wss:// bei https)
+    url: 'ws://homeassistant.local:8123/api/websocket',
+    // Langzeit-Zugriffstoken: HA, Profil unten, Sicherheit, Langzeit-Zugriffstoken
+    token: 'HIER_TOKEN_EINFUEGEN',
+
+    // Räume mit Sensoren. "plan" ordnet den Raum im Grundriss zu:
+    // z1, z2, z3, bad, wc, flur, wohnen, kueche, reduit, balkon
+    // Optional pro Raum:
+    //   motion = Bewegungsmelder (binary_sensor)  -> Raum pulsiert bei Bewegung
+    //   light  = Licht oder Steckdose              -> Raum leuchtet gelb, wenn an
+    //   co2    = CO2-Sensor in ppm                 -> Warnung, wenn die Luft schlecht ist
+    rooms: [
+      { name: 'Wohnzimmer',   plan: 'wohnen', temp: 'sensor.wohnzimmer_temperatur',   hum: 'sensor.wohnzimmer_luftfeuchtigkeit',
+        motion: 'binary_sensor.wohnzimmer_bewegung', light: 'light.wohnzimmer' },
+      { name: 'Schlafzimmer', plan: 'z1',     temp: 'sensor.schlafzimmer_temperatur', hum: 'sensor.schlafzimmer_luftfeuchtigkeit',
+        light: 'light.schlafzimmer' },
+      { name: 'Bad',          plan: 'bad',    temp: 'sensor.bad_temperatur',          hum: 'sensor.bad_luftfeuchtigkeit',
+        motion: 'binary_sensor.bad_bewegung' },
+      { name: 'Büro',         plan: 'z2',     temp: 'sensor.buero_temperatur',        hum: 'sensor.buero_luftfeuchtigkeit',
+        motion: 'binary_sensor.buero_bewegung', light: 'light.buero', co2: 'sensor.buero_co2' }
+    ],
+    // Werte außerhalb dieser Grenzen leuchten rot
+    tempMin: 18, tempMax: 26, humMin: 35, humMax: 65,
+    // CO2 in ppm: ab "warn" gelb, ab "bad" rot mit Hinweis "Lüften"
+    co2Warn: 1000, co2Bad: 1400,
+    // So lange bleibt ein Raum nach der letzten Bewegung markiert (Sekunden)
+    motionHoldSec: 20,
+
+    // ECHTE ALARME: Sobald der Sensor "on" ist, erscheint ein rotes Banner,
+    // der Raum blinkt im Grundriss und der Bildrand pulsiert. Verschwindet bei "off".
+    alarms: [
+      { entity: 'binary_sensor.rauchmelder_flur', title: 'Rauch',  text: 'Rauchmelder im Flur ausgelöst', plan: 'flur' },
+      { entity: 'binary_sensor.wasserleck_bad',   title: 'Wasser', text: 'Wasserleck im Bad erkannt',     plan: 'bad'  },
+      { entity: 'binary_sensor.haustuer_offen',   title: 'Tür',    text: 'Haustür steht offen',           plan: 'flur' }
+    ],
+
+    // Pi-hole: zeigt wirklich blockierte Werbung (Pi-hole-Integration)
+    pihole: { blocked: 'sensor.pi_hole_ads_blocked_today', percent: 'sensor.pi_hole_ads_percentage_blocked_today' },
+
+    // Luftqualität aus echten Wetterdaten (Wetter-Entity). "aqi" ist optional (Luftqualitäts-Sensor).
+    weather: { entity: 'weather.forecast_home', aqi: '' },
+
+    // Termine (Kalender-Entities) und Müllabfuhr.
+    // Müll-Sensoren dürfen ein Datum oder "Tage bis zur Abholung" liefern.
+    calendars: [ { entity: 'calendar.privat' } ],
+    garbage: [
+      { label: 'Restmüll', entity: 'sensor.abfall_restmuell' },
+      { label: 'Papier',   entity: 'sensor.abfall_papier' }
+    ],
+
+    // Türklingel: Beim Klingeln erscheint das Kamerabild groß im Vordergrund.
+    // Das Bild holt pi-stats.py (siehe dort HA_URL und HA_TOKEN). Test mit Taste D.
+    doorbell: { trigger: 'binary_sensor.haustuer_klingel', camera: 'camera.haustuer',
+                snapshot: 'http://localhost:8765/snapshot', seconds: 15 },
+
+    // Netzwerkverkehr: Entity-IDs deines Routers in Home Assistant
+    // (z. B. Fritz!Box-Integration: "Download throughput" und "Upload throughput").
+    // Leer lassen = Messung am Pi (wenn pi-stats.py läuft), sonst Simulation.
+    net: { down: '', up: '' },
+
+    // Messprogramm auf dem Pi (pi-stats.py). Leer lassen = aus.
+    stats: 'http://localhost:8765/stats',
+
+    // Design: 'auto' (folgt dem System), 'dark' oder 'light'. Taste T wechselt im Betrieb.
+    theme: 'auto'
+    // Testtasten: D = Türklingel, A = Testalarm, L = Lüften-Hinweis, T = Design, F = Vollbild
+  };
+
+  const $ = id => document.getElementById(id);
+  const root = document.documentElement;
+  const p2 = v => String(v).padStart(2,'0');
+  const cssv = n => getComputedStyle(root).getPropertyValue(n).trim();
+  const activeAlarms = new Map(), attrs = {}, motionUntil = {}, co2Notice = {};
+  let doorUntil = 0, doorStart = 0, doorTimer = null, doorUrl = null;
+
+  $('title').textContent = CONFIG.title;
+  $('sub').textContent = CONFIG.subtitle;
+  document.title = CONFIG.title;
+
+  /* ---------- Design: hell / dunkel ---------- */
+  const THEMES = ['auto','dark','light'];
+  let themeIdx = Math.max(0, THEMES.indexOf(CONFIG.theme));
+  const mq = matchMedia('(prefers-color-scheme: light)');
+  function applyTheme(){
+    const t = THEMES[themeIdx], eff = t === 'auto' ? (mq.matches ? 'light' : 'dark') : t;
+    root.setAttribute('data-theme', eff);
+  }
+  mq.addEventListener && mq.addEventListener('change', applyTheme);
+  applyTheme();
+
+  addEventListener('keydown', e => {
+    const k = e.key.toLowerCase();
+    if (k === 'f'){ document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(()=>{}); }
+    if (k === 't'){ themeIdx = (themeIdx + 1) % THEMES.length; applyTheme(); toast('Design', THEMES[themeIdx] === 'auto' ? 'Automatisch' : THEMES[themeIdx] === 'dark' ? 'Dunkel' : 'Hell', 2500); }
+    if (k === 'd') showDoorbell();
+    if (k === 'a') testAlarm();
+    if (k === 'l') toast('Lüften!', 'CO2 1520 ppm im Büro. Bitte Fenster öffnen.', 12000);
+    if (k === 'escape') hideDoor();
+  });
+
+  /* ---------- Hilfen ---------- */
+  function fmtNum(v){
+    const n = parseFloat(v); if (!isFinite(n)) return String(v).slice(0,8);
+    return (Math.abs(n) >= 100 ? n.toFixed(0) : n.toFixed(1)).replace(/\.0$/,'');
+  }
+  function fmtRate(v,unit){
+    if (v == null || !isFinite(v)) return '–';
+    if (unit === 'kB/s') return v >= 1024 ? (v/1024).toFixed(1) + ' MB/s' : Math.round(v) + ' kB/s';
+    return fmtNum(v) + (unit ? ' ' + unit.replace(/\s/g,'') : '');
+  }
+  function fitCanvas(c){
+    const dpr = Math.min(2, devicePixelRatio || 1), w = c.clientWidth|0, h = c.clientHeight|0;
+    if (w > 4 && h > 4 && (c.width !== w*dpr || c.height !== h*dpr)){ c.width = w*dpr; c.height = h*dpr; }
+    return {w, h, dpr};
+  }
+  const IC = {
+    air:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2M17.7 7.7A2.5 2.5 0 1 1 19.5 12H2"/></svg>',
+    cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+    bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+    shield:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/><path d="m9 12 2 2 4-4"/></svg>'
+  };
+
+  /* ---------- Messwerte ---------- */
+  const values = {}, units = {};
+  let stats = null, statsOk = false;
+
+  /* ---------- Grundriss ---------- */
+  const WALLS = [
+    [118,48,283,48,11],[313,48,487,48,11],[118,48,101,66,11],[101,66,101,465,11],
+    [101,465,227,465,11],[360,465,372,465,11],[398,465,487,465,11],[487,48,487,465,11],
+    [101,187,252,187,7],[101,287,224,287,7],
+    [252,50,252,118,7],[252,160,252,217,7],[252,254,252,262,7],
+    [320,50,320,118,7],[320,117,372,117,7],[372,50,372,117,7],
+    [322,150,322,168,7],[322,198,322,222,7],[322,167,487,167,7],
+    [322,255,354,291,7],[354,291,487,291,7],
+    [366,344,487,344,7],[364,300,364,344,7],
+    [367,350,367,406,3],[367,406,457,406,3]
+  ];
+  const BALCONY = [[208,465,208,576],[208,576,378,576],[378,576,378,465]];
+  const ROOMS = {
+    z1:{n:'Zimmer 1',x:[103,52,252,187],a:'14,8'},  z2:{n:'Zimmer 2',x:[103,187,252,287],a:'10,9'},
+    z3:{n:'Zimmer 3',x:[325,168,487,290],a:'14,9'}, bad:{n:'Bad',x:[372,52,487,165],a:'10,8'},
+    wc:{n:'WC',x:[322,52,372,117],a:'2,1'},         flur:{n:'Flur',x:[254,52,320,254],a:'10,3'},
+    wohnen:{n:'Wohnen',x:[103,289,362,463],a:'38'}, kueche:{n:'Küche',x:[366,346,487,463],a:'10,4'},
+    reduit:{n:'Reduit',x:[370,292,487,344],a:'5,1'}, balkon:{n:'Balkon',x:[208,467,378,576],a:'13,4'}
+  };
+  const LABELPOS = {z1:[178,115],z2:[178,232],z3:[405,222],bad:[430,105],wc:[347,85],flur:[287,150],wohnen:[232,368],kueche:[427,395],reduit:[428,313],balkon:[293,520]};
+  const planVals = {};
+  const plan = $('plan'), pc = plan.getContext('2d');
+  const BX0 = 92, BX1 = 496, BY0 = 40, BY1 = 584;
+
+  function rrect(g,x,y,w,h,r){ g.beginPath(); g.moveTo(x+r,y); g.arcTo(x+w,y,x+w,y+h,r); g.arcTo(x+w,y+h,x,y+h,r); g.arcTo(x,y+h,x,y,r); g.arcTo(x,y,x+w,y,r); g.closePath(); }
+  function drawPlan(t){
+    const {w:W,h:H,dpr} = fitCanvas(plan); if (W < 8) return;
+    const g = pc; g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+    const pad = 8, sc = Math.min((W-pad*2)/(BX1-BX0), (H-pad*2)/(BY1-BY0));
+    const ox = (W - (BX1-BX0)*sc)/2 - BX0*sc, oy = (H - (BY1-BY0)*sc)/2 - BY0*sc;
+    const X = x => ox + x*sc, Y = y => oy + y*sc;
+    const room = cssv('--room'), wall = cssv('--wall'), text = cssv('--text'), muted = cssv('--muted'), bad = cssv('--bad'),
+          warm = cssv('--warm'), warn = cssv('--warn'), pink = cssv('--pink'), accent = cssv('--accent');
+    const pulse = .5 + .5*Math.sin(t*.005);
+    const alpha = (c,a) => { g.globalAlpha = a; return c; };
+
+    // Räume
+    for (const id in ROOMS){
+      const r = ROOMS[id], x = r.x, v = planVals[id] || {};
+      const rx = X(x[0]), ry = Y(x[1]), rw = (x[2]-x[0])*sc, rh = (x[3]-x[1])*sc;
+      rrect(g,rx,ry,rw,rh,6*sc);
+      g.fillStyle = room; g.fill();
+      const tint = (c,a) => { rrect(g,rx,ry,rw,rh,6*sc); g.globalAlpha = a; g.fillStyle = c; g.fill(); g.globalAlpha = 1; };
+      if (v.light) tint(warm,.22);
+      if (v.bad || v.co2 === 2) tint(bad,.18 + .1*pulse);
+      else if (v.co2 === 1) tint(warn,.16);
+      if (v.alarm) tint(bad,.25 + .45*pulse);
+      if (id === 'balkon'){ rrect(g,rx,ry,rw,rh,6*sc); g.setLineDash([5,4]); g.strokeStyle = muted; g.globalAlpha = .45; g.lineWidth = 1.2; g.stroke(); g.setLineDash([]); g.globalAlpha = 1; }
+      if (v.motion){
+        const cx = rx + rw/2, cy = ry + rh/2;
+        for (let k=0;k<2;k++){
+          const ph = (t*.0006 + k*.5) % 1;
+          g.beginPath(); g.arc(cx,cy,ph*Math.min(rw,rh)*.55,0,6.2832);
+          g.strokeStyle = pink; g.globalAlpha = (1-ph)*.9; g.lineWidth = 2; g.stroke(); g.globalAlpha = 1;
+        }
+      }
+    }
+    // Wände
+    g.lineCap = 'round'; g.strokeStyle = wall;
+    for (const w of WALLS){ g.beginPath(); g.moveTo(X(w[0]),Y(w[1])); g.lineTo(X(w[2]),Y(w[3])); g.lineWidth = Math.max(1.5,w[4]*sc*.5); g.stroke(); }
+    g.lineWidth = Math.max(1,sc*1.2); g.globalAlpha = .5;
+    for (const w of BALCONY){ g.beginPath(); g.moveTo(X(w[0]),Y(w[1])); g.lineTo(X(w[2]),Y(w[3])); g.stroke(); }
+    g.globalAlpha = 1;
+    // Glas zum Balkon
+    g.strokeStyle = accent; g.lineWidth = Math.max(2,3*sc); g.globalAlpha = .75;
+    g.beginPath(); g.moveTo(X(227),Y(465)); g.lineTo(X(360),Y(465)); g.moveTo(X(372),Y(465)); g.lineTo(X(398),Y(465)); g.stroke(); g.globalAlpha = 1;
+    // Beschriftung
+    const f1 = Math.max(10, Math.min(15, sc*11)), f2 = Math.max(13, Math.min(24, sc*19));
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    const sel = planVals;
+    for (const id in LABELPOS){
+      const p = LABELPOS[id], v = sel[id], cx = X(p[0]), cy = Y(p[1]);
+      const hasT = v && v.t != null;
+      g.font = '600 ' + f1 + 'px ' + cssv('--font'); g.fillStyle = muted;
+      g.fillText(ROOMS[id].n, cx, cy - (hasT ? f2*.7 : f1*.1));
+      if (v && v.alarm){ g.fillStyle = bad; g.font = '700 ' + f1 + 'px ' + cssv('--font'); g.fillText('ALARM', cx, cy + f1*1.3); }
+      if (hasT){
+        g.font = '650 ' + f2 + 'px ' + cssv('--font'); g.fillStyle = v.bad ? bad : text;
+        g.fillText(v.t.toFixed(1).replace('.',',') + '°', cx, cy + f2*.45);
+      } else if (!(v && v.alarm)){
+        g.font = '500 ' + (f1-1) + 'px ' + cssv('--font'); g.fillStyle = cssv('--faint');
+        g.fillText(ROOMS[id].a + ' m²', cx, cy + f1*1.25);
+      }
+    }
+  }
+
+  /* ---------- Räume (Liste) ---------- */
+  const roomsEl = $('rooms'), rows = [], watched = new Map();
+  const motionIds = new Set(), lightIds = new Set(), roomIds = new Set();
+  const addW = (id,name) => { if (id) watched.set(id,name); };
+  function mkBd(cls,txt){ const e = document.createElement('span'); e.className = cls; e.textContent = txt; return e; }
+  CONFIG.rooms.slice(0,6).forEach(r => {
+    const row = document.createElement('div'); row.className = 'rm';
+    const n = document.createElement('span'); n.className = 'n';
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = r.name;
+    const bw = document.createElement('span'); bw.className = 'bdw';
+    const bdM = mkBd('bd m','Bewegung'), bdL = mkBd('bd l','Licht an'), bdC = mkBd('bd c0','CO₂');
+    bw.append(bdM,bdL,bdC); n.append(nm,bw);
+    const t = document.createElement('span'); t.className = 't'; t.textContent = '–';
+    const h = document.createElement('span'); h.className = 'h'; h.textContent = '–';
+    const bar = document.createElement('i'); bar.className = 'bar'; const fill = document.createElement('b'); bar.appendChild(fill);
+    row.append(n,t,h,bar); roomsEl.appendChild(row);
+    rows.push({r,row,t,h,fill,bdM,bdL,bdC});
+    [r.temp,r.hum].forEach(id => { if (id){ watched.set(id,r.name); roomIds.add(id); } });
+    if (r.motion){ watched.set(r.motion,r.name); motionIds.add(r.motion); }
+    if (r.light){ watched.set(r.light,r.name); lightIds.add(r.light); }
+    if (r.co2) watched.set(r.co2,r.name);
+  });
+  $('roomcount').textContent = CONFIG.rooms.length + ' Sensoren-Räume';
+  addW(CONFIG.net.down,'net'); addW(CONFIG.net.up,'net');
+  CONFIG.alarms.forEach(a => addW(a.entity,'alarm'));
+  const PH = CONFIG.pihole || {}; addW(PH.blocked,'pihole'); addW(PH.percent,'pihole');
+  const WX = CONFIG.weather || {}; addW(WX.entity,'wetter'); addW(WX.aqi,'aqi');
+  (CONFIG.calendars||[]).forEach(c => addW(c.entity,'kalender'));
+  (CONFIG.garbage||[]).forEach(g => addW(g.entity,g.label));
+  const DB = CONFIG.doorbell || {}; addW(DB.trigger,'klingel');
+
+  const isOn = id => !!id && values[id] === 'on';
+  function render(){
+    const now = Date.now();
+    for (const k in planVals) delete planVals[k];
+    rows.forEach(({r,row,t,h,fill,bdM,bdL,bdC}) => {
+      const tv = parseFloat(values[r.temp]), hv = parseFloat(values[r.hum]);
+      const tOk = isFinite(tv), hOk = isFinite(hv);
+      const tBad = tOk && (tv < CONFIG.tempMin || tv > CONFIG.tempMax), hBad = hOk && (hv < CONFIG.humMin || hv > CONFIG.humMax);
+      t.textContent = tOk ? tv.toFixed(1).replace('.',',') + '°' : '–';
+      h.textContent = hOk ? Math.round(hv) + ' %' : '–';
+      fill.style.width = hOk ? Math.max(0,Math.min(100,hv)) + '%' : '0';
+      t.classList.toggle('bad', tBad); h.classList.toggle('bad', hBad);
+      const light = isOn(r.light), mot = isOn(r.motion) || (motionUntil[r.motion] || 0) > now;
+      bdL.style.display = light ? 'inline-flex' : 'none'; bdM.style.display = mot ? 'inline-flex' : 'none';
+      row.classList.toggle('motion', mot);
+      let cl = 0;
+      const cv = r.co2 ? parseFloat(values[r.co2]) : NaN;
+      if (isFinite(cv)){
+        cl = cv >= CONFIG.co2Bad ? 2 : cv >= CONFIG.co2Warn ? 1 : 0;
+        bdC.textContent = 'CO₂ ' + Math.round(cv); bdC.className = 'bd c' + cl; bdC.style.display = 'inline-flex';
+        if (cl === 2 && now - (co2Notice[r.name] || 0) > 30*60*1000){
+          co2Notice[r.name] = now; toast('Lüften!', 'CO₂ ' + Math.round(cv) + ' ppm: ' + r.name + '. Bitte Fenster öffnen.', 12000);
+          push('Luft ' + r.name + ': ' + Math.round(cv) + ' ppm','a');
+        }
+      } else bdC.style.display = 'none';
+      if (r.plan && ROOMS[r.plan]) planVals[r.plan] = {t: tOk ? tv : null, bad: tBad, light, motion: mot, co2: cl};
+    });
+    activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
+  }
+  render(); setInterval(render, 1000);
+
+  /* ---------- Aktivitäts-Log ---------- */
+  const log = $('log'), MAX = 7;
+  function push(msg, cls){
+    const d = new Date(), li = document.createElement('li');
+    if (cls) li.className = cls;
+    const dot = document.createElement('i'), tm = document.createElement('time'), sp = document.createElement('span');
+    tm.textContent = p2(d.getHours()) + ':' + p2(d.getMinutes()); sp.textContent = msg;
+    li.append(dot,tm,sp); log.appendChild(li);
+    while (log.children.length > MAX) log.removeChild(log.firstChild);
+  }
+  push('Dashboard gestartet');
+
+  /* ---------- Toasts ---------- */
+  function toast(title, text, life){
+    const el = document.createElement('div'); el.className = 'toast';
+    const b = document.createElement('b'), s = document.createElement('span');
+    b.textContent = title; s.textContent = text; el.append(b,s); $('toasts').appendChild(el);
+    setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = 0; setTimeout(() => el.remove(), 320); }, life || 8000);
+  }
+
+  /* ---------- Home Assistant (WebSocket) ---------- */
+  const haEl = $('ha');
+  function setLink(txt, cls){ haEl.className = 'pill hide-sm ' + (cls||''); haEl.lastElementChild.textContent = txt; }
+  setLink('Home Assistant');
+  let ws = null, retry = 1500, wasOnline = false, authFailed = false;
+  const logged = {}, lastLog = {};
+  function applyState(id, st, at){
+    values[id] = st;
+    if (at){ attrs[id] = at; if (at.unit_of_measurement) units[id] = at.unit_of_measurement; }
+  }
+  function connect(){
+    if (!CONFIG.token || CONFIG.token.indexOf('HIER_') === 0){
+      setLink('Kein Token','bad'); push('Home-Assistant-Token fehlt','w'); return;
+    }
+    setLink('Verbinde …');
+    try { ws = new WebSocket(CONFIG.url); } catch(e){ setTimeout(connect, retry); return; }
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+      if (m.type === 'auth_required'){
+        ws.send(JSON.stringify({type:'auth', access_token: CONFIG.token}));
+      } else if (m.type === 'auth_ok'){
+        wasOnline = true; retry = 1500;
+        setLink('Verbunden','ok'); push('Home Assistant verbunden');
+        ws.send(JSON.stringify({id:1, type:'get_states'}));
+        ws.send(JSON.stringify({id:2, type:'subscribe_events', event_type:'state_changed'}));
+      } else if (m.type === 'auth_invalid'){
+        authFailed = true; setLink('Token ungültig','bad'); push('Token abgelehnt','a');
+      } else if (m.type === 'result' && m.id === 1 && m.success){
+        m.result.forEach(s => {
+          if (!watched.has(s.entity_id)) return;
+          applyState(s.entity_id, s.state, s.attributes);
+          logged[s.entity_id] = parseFloat(s.state);
+          if (motionIds.has(s.entity_id) && s.state === 'on') motionUntil[s.entity_id] = Date.now() + (CONFIG.motionHoldSec||20)*1000;
+        });
+        CONFIG.alarms.forEach(a => { if (values[a.entity] === (a.on || 'on')) alarmOn(a); });
+        render(); infoTick();
+      } else if (m.type === 'event' && m.id === 2){
+        const d = m.event && m.event.data;
+        if (!(d && d.new_state && watched.has(d.entity_id))) return;
+        const id = d.entity_id, v = d.new_state.state, old = d.old_state ? d.old_state.state : null, name = String(watched.get(id));
+        applyState(id, v, d.new_state.attributes);
+        if (motionIds.has(id) && v === 'on'){
+          motionUntil[id] = Date.now() + (CONFIG.motionHoldSec||20)*1000;
+          if (Date.now() - (lastLog[id]||0) > 60000){ lastLog[id] = Date.now(); push('Bewegung: ' + name); }
+        }
+        if (lightIds.has(id) && old !== v && (v === 'on' || v === 'off')) push('Licht ' + (v === 'on' ? 'an' : 'aus') + ': ' + name);
+        CONFIG.alarms.forEach(a => { if (a.entity === id){ v === (a.on || 'on') ? alarmOn(a) : alarmOff(id); } });
+        if (DB.trigger === id){
+          const fire = id.indexOf('event.') === 0 ? (old !== v && v !== 'unavailable' && v !== 'unknown') : (v === 'on' && old !== 'on');
+          if (fire) showDoorbell();
+        }
+        render();
+        const num = parseFloat(v);
+        if (roomIds.has(id) && isFinite(num) && Math.abs(num - (logged[id]||0)) >= 0.5){
+          logged[id] = num;
+          const isT = rows.some(x => x.r.temp === id);
+          push(name + ': ' + (isT ? num.toFixed(1).replace('.',',') + ' °C' : Math.round(num) + ' % Luftfeuchte'));
+        }
+      }
+    };
+    ws.onclose = () => {
+      if (authFailed) return;
+      if (wasOnline){ wasOnline = false; push('Verbindung zu Home Assistant verloren','w'); }
+      setLink('Offline','bad');
+      setTimeout(connect, retry); retry = Math.min(retry * 2, 30000);
+    };
+    ws.onerror = () => {};
+  }
+  connect();
+
+  /* ---------- Info-Kacheln ---------- */
+  const WD = ['So','Mo','Di','Mi','Do','Fr','Sa'];
+  const COND = {'clear-night':'Klar','cloudy':'Bewölkt','fog':'Nebel','hail':'Hagel','lightning':'Gewitter','lightning-rainy':'Gewitter mit Regen',
+    'partlycloudy':'Heiter','pouring':'Starkregen','rainy':'Regen','snowy':'Schnee','snowy-rainy':'Schneeregen','sunny':'Sonnig','windy':'Windig','windy-variant':'Windig','exceptional':'Ausnahme'};
+  function smogData(){
+    if (!WX.entity || !(WX.entity in values)) return null;
+    const a = attrs[WX.entity] || {}, c = String(values[WX.entity]);
+    let idx = 2;
+    if (/rain|pour|snow|hail|lightning|fog/.test(c)) idx += 2;
+    if (c === 'fog') idx += 1;
+    if (a.humidity > 85) idx += 1;
+    if (a.wind_speed != null && a.wind_speed < 6) idx += 1;
+    if (a.temperature != null && (a.temperature > 30 || a.temperature < -5)) idx += 1;
+    const aq = WX.aqi ? parseFloat(values[WX.aqi]) : NaN;
+    if (isFinite(aq)) idx += aq > 100 ? 4 : aq > 50 ? 2 : 0;
+    idx = Math.max(1, Math.min(10, idx));
+    const detail = (a.temperature != null ? Math.round(a.temperature) + '°C · ' : '') + (COND[c] || c) + (a.wind_speed != null ? ' · Wind ' + Math.round(a.wind_speed) : '');
+    return {idx, detail};
+  }
+  function calData(cfg){
+    const at = attrs[cfg.entity]; if (!at || !at.message) return null;
+    const msg = String(at.message).slice(0,36);
+    const st = at.start_time ? new Date(String(at.start_time).replace(' ','T')) : null;
+    if (!st || isNaN(st)) return {msg, when:'–', soon:false};
+    const now = new Date(), d0 = new Date(now); d0.setHours(0,0,0,0);
+    const s0 = new Date(st); s0.setHours(0,0,0,0);
+    const dd = Math.round((s0 - d0)/86400000);
+    if (dd < 0 && values[cfg.entity] !== 'on') return null;
+    const day = dd === 0 ? 'Heute' : dd === 1 ? 'Morgen' : WD[st.getDay()] + ' ' + p2(st.getDate()) + '.' + p2(st.getMonth()+1) + '.';
+    const time = at.all_day ? 'ganztägig' : p2(st.getHours()) + ':' + p2(st.getMinutes());
+    return {msg, when: day + ' · ' + time, soon: dd <= 1};
+  }
+  function daysUntil(id){
+    const v = values[id]; if (v == null) return null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)){
+      const d = new Date(v.slice(0,10) + 'T00:00:00'), n = new Date(); n.setHours(0,0,0,0);
+      return Math.round((d - n)/86400000);
+    }
+    const num = parseFloat(v); if (isFinite(num)) return Math.round(num);
+    const l = String(v).toLowerCase();
+    if (/heute|today/.test(l)) return 0;
+    if (/morgen|tomorrow/.test(l)) return 1;
+    return null;
+  }
+  const infoEl = $('info');
+  const irows = [['Luftqualität',IC.air],['Termin',IC.cal],['Müll',IC.bin],['Werbeblocker',IC.shield]].map(d => {
+    const tile = document.createElement('div'); tile.className = 'tile';
+    const k = document.createElement('div'); k.className = 'k'; k.innerHTML = d[1]; const kt = document.createElement('span'); kt.textContent = d[0]; k.appendChild(kt);
+    const v = document.createElement('div'); v.className = 'v'; v.textContent = '–';
+    const dd = document.createElement('div'); dd.className = 'd';
+    tile.append(k,v,dd); infoEl.appendChild(tile);
+    return {v, d:dd};
+  });
+  function setRow(i, value, detail, cls){
+    const r = irows[i]; r.v.textContent = value; r.v.className = 'v' + (cls ? ' ' + cls : ''); r.d.textContent = detail;
+  }
+  function infoTick(){
+    const sm = smogData();
+    setRow(0, sm ? sm.idx + ' / 10' : '–', sm ? sm.detail : 'Keine Wetterdaten', sm ? (sm.idx >= 7 ? 'r' : sm.idx >= 5 ? 'w' : '') : '');
+    let cal = null;
+    for (const c of (CONFIG.calendars || [])){ const x = calData(c); if (x){ cal = x; break; } }
+    setRow(1, cal ? cal.when.split(' · ')[0] : '–', cal ? cal.msg + (cal.when.indexOf('·') > 0 ? ' · ' + cal.when.split(' · ')[1] : '') : 'Kein Termin', cal && cal.soon ? 'w' : '');
+    const gl = (CONFIG.garbage || []).map(g => ({g, n: daysUntil(g.entity)})).filter(x => x.n != null && x.n >= 0).sort((a,b) => a.n - b.n);
+    if (gl.length){
+      const f = gl[0], o = gl[1];
+      setRow(2, f.n === 0 ? 'Heute' : f.n === 1 ? 'Morgen' : 'in ' + f.n + ' Tagen', f.g.label + (o ? ' · ' + o.g.label + ' in ' + o.n + ' T.' : ''), f.n <= 1 ? 'w' : '');
+    } else setRow(2, '–', 'Keine Daten', '');
+    const b = parseFloat(values[PH.blocked]), p = parseFloat(values[PH.percent]);
+    setRow(3, isFinite(b) ? Math.round(b).toLocaleString('de-DE') : '–', isFinite(p) ? Math.round(p) + ' % geblockt' : 'Keine Daten', '');
+  }
+  infoTick(); setInterval(infoTick, 2000);
+
+  /* ---------- Pi-Stats ---------- */
+  let statsWarned = false;
+  const sysEl = $('sys'), SYSDEF = [['cpu','CPU',v=>Math.round(v)+' %',v=>v>90],['ram','RAM',v=>Math.round(v)+' %',v=>v>90],
+    ['temp','Temp.',v=>v.toFixed(0)+' °C',v=>v>75],['disk','Disk',v=>Math.round(v)+' %',v=>v>90]];
+  const sysCells = SYSDEF.map(d => { const c = document.createElement('div'), s = document.createElement('span'), b = document.createElement('b'); s.textContent = d[1]; b.textContent = '–'; c.append(s,b); sysEl.appendChild(c); return c; });
+  function renderSys(){
+    $('syscard').style.display = statsOk && stats ? '' : 'none';
+    if (!statsOk || !stats) return;
+    SYSDEF.forEach((d,i) => { const v = stats[d[0]]; sysCells[i].lastChild.textContent = v != null ? d[2](v) : '–'; sysCells[i].classList.toggle('bad', v != null && d[3](v)); });
+    if (stats.uptime != null){ const s = stats.uptime, dd = (s/86400)|0, h = ((s%86400)/3600)|0, m = ((s%3600)/60)|0; $('sysup').textContent = 'Laufzeit ' + (dd ? dd+' T ' + h + ' Std' : h + ' Std ' + m + ' Min'); }
+  }
+  function pollStats(){
+    if (!CONFIG.stats) return;
+    fetch(CONFIG.stats, {cache:'no-store'}).then(r => r.json()).then(d => {
+      if (!statsOk) push('Pi-Stats verbunden');
+      stats = d; statsOk = true; statsWarned = false; renderSys();
+    }).catch(() => {
+      if (statsOk){ push('Pi-Stats nicht erreichbar','w'); }
+      else if (!statsWarned){ statsWarned = true; push('Pi-Stats: python3 pi-stats.py starten','w'); }
+      statsOk = false; renderSys();
+    });
+  }
+  if (CONFIG.stats){ pollStats(); setInterval(pollStats, 1000); }
+
+  /* ---------- Netzwerk ---------- */
+  const nc = $('nc'), nx = nc.getContext('2d');
+  const N = 40;
+  let sdv = 55, suv = 25;
+  const dn = Array.from({length:N}, () => 200 + Math.random()*180), up = Array.from({length:N}, () => 60 + Math.random()*70);
+  function drawNet(){
+    const {w:W,h:H,dpr} = fitCanvas(nc); if (W < 8) return;
+    nx.setTransform(dpr,0,0,dpr,0,0); nx.clearRect(0,0,W,H);
+    const mx = Math.max(1e-6, Math.max.apply(null,dn), Math.max.apply(null,up))*1.15;
+    const accent = cssv('--accent'), pink = cssv('--pink'), border = cssv('--border2');
+    nx.strokeStyle = border; nx.lineWidth = 1; nx.setLineDash([3,5]); nx.beginPath();
+    for (let i=1;i<4;i++){ const y = H*i/4; nx.moveTo(0,y); nx.lineTo(W,y); } nx.stroke(); nx.setLineDash([]);
+    const pts = a => a.map((v,i) => [i/(N-1)*W, H - 2 - v/mx*(H-6)]);
+    const path = p => { nx.beginPath(); p.forEach((q,i) => { if (!i) nx.moveTo(q[0],q[1]); else { const pr = p[i-1], cx = (pr[0]+q[0])/2; nx.bezierCurveTo(cx,pr[1],cx,q[1],q[0],q[1]); } }); };
+    const pd = pts(dn), pu = pts(up);
+    path(pd); nx.lineTo(W,H); nx.lineTo(0,H); nx.closePath();
+    const gr = nx.createLinearGradient(0,0,0,H); gr.addColorStop(0,accent + '55'); gr.addColorStop(1,accent + '00');
+    nx.fillStyle = gr; nx.fill();
+    path(pd); nx.strokeStyle = accent; nx.lineWidth = 2; nx.lineJoin = 'round'; nx.stroke();
+    path(pu); nx.strokeStyle = pink; nx.lineWidth = 1.6; nx.stroke();
+  }
+  function netTick(){
+    let d, u, unit = '', src = 'Simulation';
+    const nd = CONFIG.net.down, nu = CONFIG.net.up;
+    if (nd && isFinite(parseFloat(values[nd]))){ d = parseFloat(values[nd]); u = parseFloat(values[nu]); if (!isFinite(u)) u = 0; unit = units[nd] || ''; src = 'Router'; }
+    else if (statsOk && stats){ d = stats.rx; u = stats.tx; unit = 'kB/s'; src = 'Raspberry Pi'; }
+    else {
+      sdv = Math.max(6, Math.min(96, sdv + (Math.random()-.5)*28)); suv = Math.max(4, Math.min(80, suv + (Math.random()-.5)*18));
+      d = sdv*7.2; u = suv*3.1; unit = 'Mbit/s';
+    }
+    dn.push(d); dn.shift(); up.push(u); up.shift();
+    $('dn').textContent = fmtRate(d,unit); $('up').textContent = fmtRate(u,unit); $('pk').textContent = fmtRate(Math.max.apply(null,dn),unit);
+    $('nsrc').textContent = src; drawNet();
+  }
+  setInterval(netTick, 1000); netTick();
+
+  /* ---------- Echte Alarme ---------- */
+  const alarmEl = $('alarm'), alarmItems = $('alarmitems'), alarmfx = $('alarmfx');
+  function renderAlarms(){
+    alarmItems.textContent = '';
+    activeAlarms.forEach(a => {
+      const d = document.createElement('div'), b = document.createElement('b'), s = document.createElement('span');
+      b.textContent = a.title; s.textContent = a.text + ' · seit ' + a.since; d.append(b,s); alarmItems.appendChild(d);
+    });
+    const on = activeAlarms.size > 0;
+    alarmEl.classList.toggle('show', on); alarmfx.classList.toggle('show', on);
+  }
+  function alarmOn(a){
+    if (activeAlarms.has(a.entity)) return;
+    const d = new Date();
+    activeAlarms.set(a.entity, Object.assign({}, a, {since: p2(d.getHours()) + ':' + p2(d.getMinutes())}));
+    push('ALARM ' + a.title + ': ' + a.text, 'a'); renderAlarms(); render();
+  }
+  function alarmOff(id){
+    if (!activeAlarms.has(id)) return;
+    activeAlarms.delete(id); push('Alarm beendet'); renderAlarms(); render();
+  }
+  function testAlarm(){
+    const a = {entity:'test.alarm', title:'Test', text:'Testalarm ausgelöst', plan:'flur'};
+    alarmOn(a); setTimeout(() => alarmOff(a.entity), 8000);
+  }
+
+  /* ---------- Türklingel ---------- */
+  const doorEl = $('door'), doorFrame = $('doorframe'), doorCd = $('doorcd');
+  function hideDoor(){
+    doorEl.classList.remove('show'); doorUntil = 0; clearInterval(doorTimer);
+    if (doorUrl){ URL.revokeObjectURL(doorUrl); doorUrl = null; }
+  }
+  doorEl.addEventListener('click', hideDoor);
+  function showDoorbell(){
+    hideDoor();
+    const secs = DB.seconds || 15;
+    doorStart = Date.now(); doorUntil = doorStart + secs*1000;
+    const d = new Date(doorStart);
+    $('doortime').textContent = p2(d.getHours()) + ':' + p2(d.getMinutes()) + ':' + p2(d.getSeconds());
+    doorFrame.textContent = DB.camera && DB.snapshot ? 'Lade Kamerabild …' : 'Keine Kamera konfiguriert';
+    doorEl.classList.add('show'); push('Klingel: Besuch an der Haustür','a');
+    doorTimer = setInterval(() => {
+      const left = doorUntil - Date.now();
+      doorCd.style.width = Math.max(0, left/(secs*1000)*100) + '%';
+      if (left <= 0) hideDoor();
+    }, 100);
+    if (DB.camera && DB.snapshot){
+      fetch(DB.snapshot + '?entity=' + encodeURIComponent(DB.camera) + '&t=' + Date.now(), {cache:'no-store'})
+        .then(r => { if (!r.ok) throw new Error('http ' + r.status); return r.blob(); })
+        .then(b => { if (!doorEl.classList.contains('show')) return; doorUrl = URL.createObjectURL(b); const im = new Image(); im.src = doorUrl; im.alt = 'Haustür'; doorFrame.textContent = ''; doorFrame.appendChild(im); })
+        .catch(() => { doorFrame.textContent = 'Kein Kamerabild verfügbar'; push('Kamera: kein Bild','w'); });
+    }
+  }
+
+  /* ---------- Uhr ---------- */
+  function tick(){
+    const d = new Date();
+    $('time').textContent = p2(d.getHours()) + ':' + p2(d.getMinutes());
+    $('date').textContent = d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'});
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* ---------- Zeichenschleife (Grundriss) ---------- */
+  let last = 0;
+  function loop(t){
+    requestAnimationFrame(loop);
+    if (t - last < 33) return; last = t;
+    drawPlan(t);
+  }
+  requestAnimationFrame(loop);
+  addEventListener('resize', drawNet);
+})();
+</script>
+</body>
+</html>
