@@ -153,6 +153,49 @@
   .fh b{display:block;font-size:14px;font-weight:600}
   .fh small{display:block;margin-top:2px;font-size:11px;color:var(--accent);min-height:13px}
 
+  /* ---------- Daten veraltet ---------- */
+  .pill.stale{background:var(--bad-soft);color:var(--bad);border-color:rgba(255,93,108,.4);font-weight:600}
+  .pill.stale i{background:var(--bad);animation:pulse 1.4s infinite}
+  main,.ambient>*{transition:opacity .8s ease,filter .8s ease}
+  body.stale main,body.stale .ambient>*{opacity:.38;filter:grayscale(.8)}
+
+  /* ---------- Burn-in-Schutz ---------- */
+  .app,.ambient{transform:translate(var(--bx,0px),var(--by,0px));transition:transform 8s ease}
+  .ambient{transition:opacity 1.2s ease,visibility 1.2s,transform 8s ease}
+
+  /* ---------- Steuerung (Handy) ---------- */
+  .ctl{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+  .ctlb{appearance:none;-webkit-appearance:none;font:inherit;text-align:left;border:1px solid var(--border);background:var(--surface2);color:var(--text);
+    border-radius:16px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:6px;min-height:78px;transition:background .2s,transform .1s}
+  .ctlb:active{transform:scale(.97)}
+  .ctlb b{font-size:14px;font-weight:600} .ctlb span{font-size:12px;color:var(--muted)}
+  body.ctrl .col:first-child{order:-2}
+  .ctlb.on{background:rgba(255,211,122,.14);border-color:rgba(255,211,122,.35)} .ctlb.on span{color:var(--warm)}
+
+  /* ---------- Ruhige Ansicht (Seiten-Wechsel) ---------- */
+  .ambient{position:fixed;inset:0;z-index:15;background:radial-gradient(1200px 700px at 10% -10%,var(--bg2),var(--bg));
+    display:flex;flex-direction:column;justify-content:center;gap:clamp(18px,3.4vh,44px);padding:clamp(24px,4.5vw,72px);
+    opacity:0;visibility:hidden;pointer-events:none}
+  .ambient.show{opacity:1;visibility:visible}
+  .amb-top{display:flex;align-items:flex-end;justify-content:space-between;gap:32px;flex-wrap:wrap}
+  .amb-time{font-size:clamp(80px,15vw,230px);font-weight:600;letter-spacing:-.05em;line-height:.88;font-variant-numeric:tabular-nums}
+  .amb-date{margin-top:14px;font-size:clamp(18px,2.4vw,36px);color:var(--muted)}
+  .amb-wx{display:flex;align-items:center;gap:clamp(14px,2vw,28px)}
+  .amb-ic svg{width:clamp(64px,8vw,130px);height:clamp(64px,8vw,130px);color:var(--accent)}
+  .amb-t{font-size:clamp(44px,6.4vw,100px);font-weight:600;letter-spacing:-.04em;line-height:1}
+  .amb-c{margin-top:6px;font-size:clamp(16px,2vw,28px);color:var(--muted)}
+  .amb-fc{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:10px}
+  .amb-fc .fh{padding:clamp(10px,1.6vh,22px) 4px}
+  .amb-fc .fh time{font-size:clamp(13px,1.5vw,20px)}
+  .amb-fc .fh svg{width:clamp(28px,3.2vw,48px);height:clamp(28px,3.2vw,48px)}
+  .amb-fc .fh b{font-size:clamp(18px,2.2vw,32px)} .amb-fc .fh small{font-size:clamp(12px,1.3vw,18px)}
+  .amb-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .amb-tiles .tile{padding:clamp(14px,2vh,24px) clamp(14px,1.6vw,24px);border-radius:20px}
+  .amb-tiles .tile .k{font-size:clamp(12px,1.3vw,17px)}
+  .amb-tiles .tile .v{font-size:clamp(22px,2.8vw,42px)} .amb-tiles .tile .d{font-size:clamp(12px,1.3vw,17px)}
+  .ambient .chips{margin:0}
+  @media (max-width:900px){.ambient{display:none}}
+
   /* ---------- Display dimmen ---------- */
   .dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity 4s ease}
 
@@ -233,12 +276,17 @@
       <div><h1 id="title">Home</h1><p id="sub">Wohnung</p></div>
     </div>
     <div class="spacer"></div>
+    <span class="pill stale" id="stale" style="display:none"><i></i><span></span></span>
     <span class="pill hide-sm" id="ha"><i></i><span>Home Assistant</span></span>
     <div class="clock"><div id="time">00:00</div><div id="date"></div></div>
   </header>
 
   <main>
     <div class="col">
+      <section class="card" id="ctlcard" style="display:none">
+        <h2>Steuerung <em>Handy</em></h2>
+        <div class="ctl" id="ctl"></div>
+      </section>
       <section class="card grow">
         <h2>Räume <em id="roomcount"></em></h2>
         <div id="rooms"></div>
@@ -292,6 +340,15 @@
   </main>
 </div>
 
+<div class="ambient" id="ambient">
+  <div class="amb-top">
+    <div><div class="amb-time" id="ambtime">00:00</div><div class="amb-date" id="ambdate"></div></div>
+    <div class="amb-wx"><div class="amb-ic" id="ambic"></div><div><div class="amb-t" id="ambt"></div><div class="amb-c" id="ambc"></div></div></div>
+  </div>
+  <div class="amb-fc" id="ambfc"></div>
+  <div class="amb-tiles" id="ambtiles"></div>
+  <div class="chips" id="ambchips"></div>
+</div>
 <div class="alarmfx" id="alarmfx"></div>
 <div class="dim" id="dim"></div>
 <div class="alarm" id="alarm" role="alert">
@@ -411,6 +468,35 @@
            // gibt es einen Alarm oder klingelt es, geht er sofort wieder an.
            screenOff: { enabled: true, awayMin: 10, url: 'http://localhost:8765/display' } },
 
+    // MÜLL AM VORABEND: Ist morgen Abholung, erinnert das Dashboard ab dieser Uhrzeit (Stunde, 0 bis 23)
+    // an die Tonne. Dazu müssen die Müll-Sensoren (garbage) weiter unten gesetzt sein.
+    garbageEveningHour: 19,
+
+    // DATEN VERALTET: Kommt so lange (Sekunden) nichts mehr von Home Assistant, wird die Anzeige
+    // abgedunkelt und eine rote Meldung "Keine Daten seit ..." erscheint.
+    staleSec: 90,
+
+    // WARTUNG: Lädt die Seite jede Nacht einmal neu (damit sie nach Wochen nicht hängt) und verschiebt
+    // den Inhalt alle paar Minuten um wenige Pixel (Schutz vor Einbrennen bei OLED/Plasma). reloadAt: '' = aus.
+    maintenance: { reloadAt: '03:30', burnIn: true },
+
+    // SEITEN-WECHSEL: Die Hauptseite wechselt automatisch mit einer ruhigen Ansicht (große Uhr, Wetter, Termine).
+    // Bei Alarm, Klingel, Fenster-Warnung, gedimmtem Bildschirm oder veralteten Daten bleibt die Hauptseite.
+    pages: { enabled: true, mainSec: 45, ambientSec: 15 },
+
+    // STEUERUNG VOM HANDY: Diese Knöpfe erscheinen nur, wenn die Seite auf einem Touch-Gerät
+    // (Handy, Tablet) oder mit ?control geöffnet wird, nie am Wand-Display ohne Touch.
+    // Je nach Art passt der Knopf selbst: Licht/Schalter = umschalten, scene/script = ausführen,
+    // lock = ver-/aufschließen (mit Rückfrage), cover = auf/zu, vacuum = Start / zurück zur Station.
+    controls: [
+      { name: 'Wohnzimmer',   entity: 'light.wohnzimmer' },
+      { name: 'Stehlampe',    entity: 'light.stehlampe' },
+      { name: 'Kino',         entity: 'scene.kino' },
+      { name: 'Alles aus',    entity: 'script.alles_aus' },
+      { name: 'Haustür',      entity: 'lock.haustuer' },
+      { name: 'Saugroboter',  entity: 'vacuum.dreame' }
+    ],
+
     // LÄUFT GERADE: Musik- und Videoplayer (media_player.*) mit Titel und Cover.
     // x/y/plan sind optional und zeigen ein Notensymbol im Grundriss, solange etwas spielt.
     media: [
@@ -421,7 +507,9 @@
     devices: [
       { name: 'Waschmaschine', entity: 'sensor.waschmaschine_leistung', above: 5 },
       { name: 'Geschirrspüler', entity: 'switch.geschirrspueler' },
-      { name: 'Fernseher',     entity: 'media_player.fernseher_wohnzimmer', playing: true }
+      { name: 'Fernseher',     entity: 'media_player.fernseher_wohnzimmer', playing: true },
+      // Saugroboter (z. B. Dreame, Roborock, Xiaomi): jede vacuum.*-Entity zeigt Zustand und Akku automatisch
+      { name: 'Saugroboter',   entity: 'vacuum.dreame' }
     ],
 
     // Pi-hole: zeigt wirklich blockierte Werbung (Pi-hole-Integration)
@@ -493,6 +581,7 @@
   let modeIdx = Math.max(0, MODES.indexOf(TH.mode));
   const q = new URLSearchParams(location.search);
   const simTime = q.get('time');
+  const CTRL_MODE = q.get('control') !== null || matchMedia('(pointer:coarse)').matches;   // Handy/Tablet oder ?control
   if (q.get('theme') && MODES.indexOf(q.get('theme')) >= 0) modeIdx = MODES.indexOf(q.get('theme'));
   const hm = s => { const a = String(s).split(':').map(Number); return a[0]*60 + (a[1]||0); };
   const smooth = x => { x = Math.max(0, Math.min(1, x)); return x*x*(3-2*x); };
@@ -526,6 +615,7 @@
     const k = e.key.toLowerCase();
     if (k === 'f'){ document.fullscreenElement ? document.exitFullscreen() : root.requestFullscreen().catch(()=>{}); }
     if (k === 't'){ modeIdx = (modeIdx + 1) % MODES.length; applyTheme(true); toast('Design', ['Automatisch (Tag/Nacht)','Immer dunkel','Immer hell'][modeIdx], 2500); }
+    if (k === 'p' && !CTRL_MODE) setAmbient(!ambientOn);
     if (k === 'd') showDoorbell();
     if (k === 'a') testAlarm();
     if (k === 'l') toast('Lüften!', 'CO2 1520 ppm im Büro. Bitte Fenster öffnen.', 12000);
@@ -799,7 +889,7 @@
 
   /* ---------- Wetter-Vorschau ---------- */
   const FC = Object.assign({enabled:true, hours:6, refreshMin:30}, CONFIG.forecast || {});
-  let forecast = [], fcType = 'hourly', fcSig = '';
+  let forecast = [], fcType = 'hourly', fcSig = '', fcId = 0;
   const CI = {
     sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
     moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
@@ -828,7 +918,8 @@
   }
   function requestForecast(){
     if (!FC.enabled || !WX.entity || !ws || ws.readyState !== 1) return;
-    ws.send(JSON.stringify({id:3, type:'call_service', domain:'weather', service:'get_forecasts', service_data:{type:fcType},
+    fcId = nid();
+    ws.send(JSON.stringify({id:fcId, type:'call_service', domain:'weather', service:'get_forecasts', service_data:{type:fcType},
       target:{entity_id:WX.entity}, return_response:true}));
   }
   function gotForecast(m){
@@ -905,6 +996,7 @@
   /* ---------- Bildschirm dimmen ---------- */
   const DIM = Object.assign({enabled:true, afterMin:5, level:.82, onlyNight:true}, CONFIG.dim || {});
   const SO = Object.assign({enabled:false, awayMin:10, url:'http://localhost:8765/display'}, DIM.screenOff || {});
+  if (CTRL_MODE){ DIM.enabled = false; SO.enabled = false; }
   let screenOff = false, awaySince = 0;
   function setScreen(on){
     if (!SO.enabled || screenOff === !on) return;
@@ -928,6 +1020,148 @@
     if (want !== dimmed){ dimmed = want; dimEl.style.opacity = want ? DIM.level : 0; }
   }
   setInterval(dimCheck, 5000);
+
+  /* ---------- Gemeinsames: Nachrichten-IDs, Steuerung vom Handy, Wartung ---------- */
+  let msgId = 10;
+  const nid = () => ++msgId;                 // Home Assistant verlangt streng steigende IDs
+  const calls = new Map();                   // id -> Name, für Fehlermeldungen von Service-Aufrufen
+  const appEl = document.querySelector('.app');
+
+  const CTL = CONFIG.controls || [], ctlEl = $('ctl'), ctlBtns = [];
+  const CSTATE = {on:'An', off:'Aus', locked:'Verriegelt', unlocked:'Offen', open:'Offen', closed:'Zu', cleaning:'Saugt', docked:'In Station',
+    returning:'Fährt zurück', paused:'Pausiert', idle:'Bereit', error:'Fehler', unavailable:'Nicht erreichbar', playing:'Spielt', unknown:'–'};
+  const CON = new Set(['on','cleaning','playing','open']);
+  if (CTRL_MODE && CTL.length){
+    $('ctlcard').style.display = ''; document.body.classList.add('ctrl');
+    CTL.forEach(c => {
+      addW(c.entity, c.name);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'ctlb';
+      const t = document.createElement('b'), st = document.createElement('span'); t.textContent = c.name; b.append(t, st);
+      b.addEventListener('click', () => pressCtl(c)); ctlEl.appendChild(b); ctlBtns.push({c, b, st});
+    });
+  }
+  function ctlService(c){
+    const dom = c.entity.split('.')[0], st = values[c.entity];
+    switch (dom){
+      case 'scene': case 'script': return [dom, 'turn_on'];
+      case 'button': case 'input_button': return [dom, 'press'];
+      case 'lock': return ['lock', st === 'locked' ? 'unlock' : 'lock'];
+      case 'cover': return ['cover', 'toggle'];
+      case 'vacuum': return ['vacuum', st === 'cleaning' ? 'return_to_base' : 'start'];
+      case 'media_player': return ['media_player', 'media_play_pause'];
+      default: return ['homeassistant', 'toggle'];
+    }
+  }
+  function pressCtl(c){
+    if (!ws || ws.readyState !== 1){ toast('Keine Verbindung', 'Home Assistant ist nicht erreichbar.', 4000, 'bad'); return; }
+    const sv = ctlService(c);
+    if (sv[1] === 'unlock' && !confirm('Wirklich aufschließen: ' + c.name + '?')) return;
+    const id = nid(); calls.set(id, c.name);
+    ws.send(JSON.stringify({id, type:'call_service', domain:sv[0], service:sv[1], target:{entity_id:c.entity}}));
+    push('Gesteuert: ' + c.name);
+  }
+  function updateCtl(){
+    ctlBtns.forEach(({c, b, st}) => { const v = values[c.entity], dom = c.entity.split('.')[0];
+      const txt = (dom === 'scene' || dom === 'script' || dom === 'button') ? 'Ausführen' : (v == null ? '–' : CSTATE[v] || v);
+      st.textContent = txt; b.classList.toggle('on', CON.has(v) && dom !== 'scene' && dom !== 'script'); });
+  }
+
+  // Wartung: nächtlicher Neustart der Seite und Burn-in-Schutz
+  const MT = Object.assign({reloadAt:'03:30', burnIn:true, minUptimeSec:300}, CONFIG.maintenance || {});
+  const loadedAt = Date.now();
+  if (!CTRL_MODE){
+    setInterval(() => {
+      const d = new Date();
+      if (MT.reloadAt && p2(d.getHours()) + ':' + p2(d.getMinutes()) === MT.reloadAt && Date.now() - loadedAt > MT.minUptimeSec*1000) location.reload();
+    }, 20000);
+    if (MT.burnIn){
+      const BI = [[0,0],[3,2],[-3,3],[2,-3],[-2,-2],[0,3]]; let bi = 0;
+      setInterval(() => { bi = (bi + 1) % BI.length; root.style.setProperty('--bx', BI[bi][0] + 'px'); root.style.setProperty('--by', BI[bi][1] + 'px'); }, 180000);
+    }
+  }
+
+  /* ---------- Daten veraltet ---------- */
+  const STALE_SEC = Math.max(10, CONFIG.staleSec || 90);
+  let lastAlive = 0, everOnline = false, wasStale = false;
+  function staleCheck(){
+    const silent = everOnline ? (Date.now() - lastAlive)/1000 : 0, stale = everOnline && silent > STALE_SEC;
+    const el = $('stale'); el.style.display = stale ? '' : 'none';
+    if (stale) el.lastChild.textContent = 'Keine Daten seit ' + (silent < 120 ? Math.round(silent) + ' s' : Math.round(silent/60) + ' Min');
+    document.body.classList.toggle('stale', stale);
+    if (stale !== wasStale){ wasStale = stale; push(stale ? 'Keine Daten von Home Assistant – Werte können veraltet sein' : 'Daten wieder aktuell', stale ? 'a' : ''); }
+    // Verbindung hängt (offen, aber stumm): schließen, damit sie neu aufgebaut wird
+    if (ws && ws.readyState === 1 && silent > STALE_SEC*1.5) try { ws.close(); } catch(e){}
+  }
+  setInterval(staleCheck, 5000);
+  setInterval(() => { if (ws && ws.readyState === 1 && everOnline) ws.send(JSON.stringify({id:nid(), type:'ping'})); }, 20000);
+
+  /* ---------- Müll am Vorabend ---------- */
+  const GEV = CONFIG.garbageEveningHour == null ? 19 : CONFIG.garbageEveningHour;
+  let garbKey = '';
+  function garbageTomorrow(){
+    if (new Date().getHours() < GEV) return null;
+    const l = (CONFIG.garbage || []).filter(g => daysUntil(g.entity) === 1).map(g => g.label);
+    return l.length ? l : null;
+  }
+  function checkGarbage(){
+    const l = garbageTomorrow(), key = l ? new Date().toDateString() + l.join() : '';
+    if (key && key !== garbKey){ toast('Tonne rausstellen', 'Morgen wird abgeholt: ' + l.join(', ') + '.', 20000); push('Müll morgen: ' + l.join(', '), 'w'); }
+    garbKey = key;
+  }
+
+  /* ---------- Saugroboter (vacuum.*) ---------- */
+  const vacErr = {};
+  function vacText(d){
+    const v = values[d.entity], b = (attrs[d.entity] || {}).battery_level, bt = b != null ? ' · ' + Math.round(b) + ' %' : '';
+    if (v === 'cleaning') return 'saugt' + bt; if (v === 'returning') return 'fährt zur Station' + bt;
+    if (v === 'paused') return 'pausiert' + bt; if (v === 'error') return 'Fehler';
+    return null;
+  }
+  function checkVacuum(){
+    DEVS.forEach(d => { if (d.entity.indexOf('vacuum.') !== 0) return;
+      const err = values[d.entity] === 'error';
+      if (err && !vacErr[d.entity]){ const a = attrs[d.entity] || {}; toast(d.name + ': Fehler', String(a.error || a.status || 'Bitte nachsehen.'), 20000, 'bad'); push(d.name + ': Fehler', 'a'); }
+      vacErr[d.entity] = err; });
+  }
+
+  /* ---------- Seiten-Wechsel: ruhige Ansicht ---------- */
+  const PG = Object.assign({enabled:true, mainSec:45, ambientSec:15}, CONFIG.pages || {});
+  const ambEl = $('ambient');
+  let ambientOn = false, pageSince = Date.now();
+  function setAmbient(on){ ambientOn = on; ambEl.classList.toggle('show', on); pageSince = Date.now(); if (on) renderAmbient(); }
+  function renderAmbient(){
+    const d = new Date();
+    $('ambtime').textContent = p2(d.getHours()) + ':' + p2(d.getMinutes());
+    $('ambdate').textContent = d.toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
+    const a = WX.entity ? (attrs[WX.entity] || {}) : {}, c = WX.entity ? String(values[WX.entity] || '') : '';
+    $('ambt').textContent = a.temperature != null ? Math.round(a.temperature) + '°' : '';
+    $('ambc').textContent = c ? (COND[c] || c) + (a.humidity != null ? ' · ' + Math.round(a.humidity) + ' % Feuchte' : '') : '';
+    $('ambic').innerHTML = c ? condSvg(c, d.getHours() < 6 || d.getHours() >= 21) : '';
+    const fc = $('ambfc'); fc.textContent = '';
+    forecast.filter(f => new Date(f.datetime).getTime() > Date.now() - 3600000).slice(0, 8).forEach(f => {
+      const dt = new Date(f.datetime), col = document.createElement('div'); col.className = 'fh' + (isRainCond(f.condition) ? ' rain' : '');
+      const tm = document.createElement('time'); tm.textContent = fcType === 'hourly' ? p2(dt.getHours()) + ' Uhr' : WD[dt.getDay()];
+      const ic = document.createElement('div'); ic.innerHTML = condSvg(f.condition, dt.getHours() < 6 || dt.getHours() >= 21);
+      const t = document.createElement('b'); t.textContent = f.temperature != null ? Math.round(f.temperature) + '°' : '–';
+      const pr = document.createElement('small'); pr.textContent = f.precipitation_probability ? f.precipitation_probability + ' %' : '';
+      col.append(tm, ic.firstChild, t, pr); fc.appendChild(col);
+    });
+    fc.style.display = fc.children.length ? '' : 'none';
+    const tl = $('ambtiles'); tl.textContent = '';
+    irows.forEach((r, i) => { const t = document.createElement('div'); t.className = 'tile';
+      const k = document.createElement('div'); k.className = 'k'; k.innerHTML = r.k.innerHTML;
+      const v = document.createElement('div'); v.className = r.v.className; v.textContent = r.v.textContent;
+      const dd = document.createElement('div'); dd.className = 'd'; dd.textContent = r.d.textContent; t.append(k, v, dd); tl.appendChild(t); });
+    const ch = $('ambchips'); ch.textContent = ''; chipSpecs().forEach(sp => ch.appendChild(mkChip(sp[0], sp[1], sp[2])));
+  }
+  function pageTick(){
+    if (!PG.enabled || CTRL_MODE) return;
+    const busy = activeAlarms.size > 0 || Date.now() < doorUntil || WINWARN || dimmed || screenOff || document.body.classList.contains('stale');
+    if (busy){ if (ambientOn) setAmbient(false); return; }
+    if (ambientOn) renderAmbient();
+    if (Date.now() - pageSince > (ambientOn ? PG.ambientSec : PG.mainSec)*1000) setAmbient(!ambientOn);
+  }
+  setInterval(pageTick, 1000);
 
   /* Warnung: Fenster offen bei Regen oder Kälte */
   const WW = Object.assign({rain:true, rainSensor:'', coldBelow:null, repeatMin:30}, CONFIG.windowWarn || {});
@@ -966,6 +1200,7 @@
       const l = names(v.list.map(x => x.name + ' (' + x.why + ')'), 2);
       out.push(v.ok ? ['vent', IC.air, 'Lüften empfohlen: ' + l] : ['win open', IC.air, 'Luft schlecht: ' + l + ' – draußen ' + (v.rainy ? 'Regen' : Math.round(v.out) + ' °C') + ', nur kurz lüften']);
     }
+    const gt = garbageTomorrow(); if (gt) out.push(['win open', IC.bin, 'Morgen Müll: ' + gt.join(', ')]);
     const lb = lowBatteries(); if (lb.length) out.push(['win open', IC.batt, 'Batterie schwach: ' + names(lb.map(x => x.name + ' (' + x.txt + ')'), 3)]);
     return out;
   }
@@ -979,6 +1214,7 @@
   function devRunning(d){
     const v = values[d.entity]; if (v == null) return null;
     if (d.playing) return v === 'playing' ? 'läuft' : null;
+    if (d.entity.indexOf('vacuum.') === 0) return vacText(d);
     const n = parseFloat(v);
     if (d.above != null && isFinite(n)) return n > d.above ? Math.round(n) + (units[d.entity] ? ' ' + units[d.entity] : ' W') : null;
     return (v === 'on' || v === 'running' || v === 'playing') ? 'an' : null;
@@ -1049,7 +1285,7 @@
     });
     LAMPS.forEach(l => { if (isOn(l.entity) && l.plan && ROOMS[l.plan]){ const e = planVals[l.plan] || (planVals[l.plan] = {t:null}); e.light = true; } });
     activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
-    checkWindowWarn(); checkAway(); checkBattery(); renderPeople(); renderForecast(); renderChips(); renderNow();
+    checkWindowWarn(); checkAway(); checkBattery(); checkGarbage(); checkVacuum(); updateCtl(); renderPeople(); renderForecast(); renderChips(); renderNow();
   }
   render(); setInterval(render, 1000);
 
@@ -1091,14 +1327,18 @@
     try { ws = new WebSocket(CONFIG.url); } catch(e){ setTimeout(connect, retry); return; }
     ws.onmessage = ev => {
       let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
+      lastAlive = Date.now();
       if (m.type === 'auth_required'){
         ws.send(JSON.stringify({type:'auth', access_token: CONFIG.token}));
       } else if (m.type === 'auth_ok'){
-        wasOnline = true; retry = 1500;
+        wasOnline = true; everOnline = true; retry = 1500;
         setLink('Verbunden','ok'); push('Home Assistant verbunden');
         ws.send(JSON.stringify({id:1, type:'get_states'}));
         ws.send(JSON.stringify({id:2, type:'subscribe_events', event_type:'state_changed'}));
         requestForecast();
+      } else if (m.type === 'result' && calls.has(m.id)){
+        const nm = calls.get(m.id); calls.delete(m.id);
+        if (!m.success) toast('Fehlgeschlagen', nm + ': ' + ((m.error && m.error.message) || 'Fehler'), 6000, 'bad');
       } else if (m.type === 'auth_invalid'){
         authFailed = true; setLink('Token ungültig','bad'); push('Token abgelehnt','a');
       } else if (m.type === 'result' && m.id === 1 && m.success){
@@ -1111,7 +1351,7 @@
         });
         CONFIG.alarms.forEach(a => { if (values[a.entity] === (a.on || 'on')) alarmOn(a); });
         render(); infoTick();
-      } else if (m.type === 'result' && m.id === 3){
+      } else if (m.type === 'result' && m.id === fcId){
         gotForecast(m);
       } else if (m.type === 'event' && m.id === 2){
         const d = m.event && m.event.data;
@@ -1201,7 +1441,7 @@
     const v = document.createElement('div'); v.className = 'v'; v.textContent = '–';
     const dd = document.createElement('div'); dd.className = 'd';
     tile.append(k,v,dd); infoEl.appendChild(tile);
-    return {v, d:dd};
+    return {k, v, d:dd};
   });
   function setRow(i, value, detail, cls){
     const r = irows[i]; r.v.textContent = value; r.v.className = 'v' + (cls ? ' ' + cls : ''); r.d.textContent = detail;

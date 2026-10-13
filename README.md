@@ -14,6 +14,12 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - **Lüften-Empfehlung:** Bei hohem CO₂ oder hoher Luftfeuchte, wenn es draußen passt und im Raum kein Fenster offen ist
 - **Display aus bei Abwesenheit:** Sind alle länger als 10 Minuten unterwegs, schaltet der Pi den Bildschirm wirklich aus und bei Heimkehr oder Bewegung wieder an
 - **Bildschirm dimmen:** Nachts ohne Bewegung dunkelt das Display ab und wird bei Bewegung, Alarm, Klingel oder Berührung sofort wieder hell
+- **Müll am Vorabend:** Ab 19 Uhr erinnert das Dashboard an die Tonne, wenn morgen abgeholt wird
+- **Daten veraltet:** Kommt nichts mehr von Home Assistant, wird die Anzeige abgedunkelt und „Keine Daten seit …“ erscheint, statt alte Werte als aktuell zu zeigen
+- **Seiten-Wechsel:** Die Hauptseite wechselt mit einer ruhigen Ansicht (große Uhr, Wetter, Termine, Müll)
+- **Wartung:** Neustart der Seite jede Nacht und Burn-in-Schutz (Inhalt wandert minimal)
+- **Steuerung vom Handy:** Knöpfe für Licht, Szenen, Skripte, Schloss und Saugroboter (nur auf Touch-Geräten)
+- **Saugroboter:** Zustand und Akku von `vacuum.*`-Geräten (z. B. Dreame) unter „Läuft gerade“, mit Fehlermeldung
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
 - Luftqualität, Termine, Müllabfuhr, Pi-hole, Netzwerkverkehr und Pi-Systemwerte
@@ -55,6 +61,11 @@ In Home Assistant: **Profil** (unten links) → **Sicherheit** → **Langzeit-Zu
 | `battery` | Schwellwert `warn` in %, `exclude` (z. B. Handy-Akkus) und `extra` für Sensoren von Hand |
 | `ventilate` | Lüften-Empfehlung, `minOutside` = kälteste Außentemperatur dafür |
 | `dim` | Bildschirm dimmen: `afterMin`, `level` (0 bis 1), `onlyNight` |
+| `garbageEveningHour` | Ab dieser Uhrzeit (Stunde) Müll-Erinnerung am Vorabend |
+| `staleSec` | Nach so vielen Sekunden ohne Daten gilt die Anzeige als veraltet |
+| `maintenance` | Nächtlicher Neustart (`reloadAt`) und `burnIn` |
+| `pages` | Seiten-Wechsel: `mainSec` Hauptseite, `ambientSec` ruhige Ansicht |
+| `controls` | Knöpfe für die Steuerung vom Handy |
 | `media` / `devices` | Musikplayer und Geräte für „Läuft gerade“ |
 | `alarms` | Rauch-, Wasser- und Türmelder |
 | `pihole`, `weather`, `calendars`, `garbage` | Optionale Info-Kacheln |
@@ -88,6 +99,37 @@ python3 -m http.server 8080      # dann http://localhost:8080 öffnen
 
 > **Hinweis:** Läuft die Seite über `https://`, muss auch Home Assistant über `wss://` erreichbar sein, sonst blockt der Browser die Verbindung.
 
+## Steuerung vom Handy
+
+Das Wand-Display ist reine Anzeige. Auf einem **Handy oder Tablet** (Touch-Gerät) erscheint oben zusätzlich die Karte **Steuerung** mit den Knöpfen aus `CONFIG.controls`. Am Wand-Display ohne Touch bleibt sie unsichtbar. Mit `?control` an der Adresse siehst du sie auf jedem Gerät.
+
+| Entity | Knopf macht |
+|---|---|
+| `light.*`, `switch.*`, `input_boolean.*` | Umschalten |
+| `scene.*`, `script.*`, `button.*` | Ausführen |
+| `lock.*` | Ver- und Aufschließen (Aufschließen mit Rückfrage) |
+| `cover.*` | Auf / Zu |
+| `vacuum.*` | Start / Zurück zur Station |
+
+**Einrichtung:** Das Handy muss die Seite erreichen. Der einfachste Weg ist ein kleiner Webserver auf dem Pi, im Ordner des Dashboards:
+
+```bash
+python3 -m http.server 8080
+```
+
+Dann öffnest du auf dem Handy `http://<IP-des-Pi>:8080/` (oder `…/?control`). Auf dem Startbildschirm ablegen geht über „Zum Home-Bildschirm“.
+
+> **Sicherheit:** Das Token steht in `index.html`. Wer die Datei abrufen kann, hat vollen Zugriff auf dein Home Assistant. Stelle sie deshalb **nur im Heimnetz** bereit, nie ins Internet. Von außen nutzt du besser die Home-Assistant-App.
+
+## Weitere Geräte (Saugroboter, Waschmaschine, …)
+
+Alles, was in Home Assistant als Entity auftaucht, kann das Dashboard anzeigen. Du brauchst nur die Entity-ID.
+
+- **Dreame-Saugroboter:** Die Integration dafür gibt es über [HACS](https://hacs.xyz/) („Dreame Vacuum“). Danach gibt es eine `vacuum.*`-Entity. Trage sie unter `devices` (Anzeige) und `controls` (Start/Zurück) ein.
+- **Roborock, Xiaomi, Ecovacs und andere:** Die offiziellen Integrationen liefern ebenfalls `vacuum.*`. Das Dashboard behandelt sie gleich.
+- **Waschmaschine, Trockner:** Eine Steckdose mit Leistungsmessung als `sensor.*` in `devices` mit `above: 5` (Watt) eintragen.
+- **Beliebige Sensoren:** Wenn du etwas Eigenes anzeigen willst, sag Bescheid oder schau dir `devices` und `controls` an.
+
 ## Tag-/Nacht-Design
 
 Standardmäßig ist das Design am Tag hell. Ab **18:00 Uhr** blendet es über **60 Minuten** langsam in den Dunkelmodus (fertig um 19:00 Uhr). Ab **07:00 Uhr** blendet es über eine Stunde wieder zurück. Einstellbar in `CONFIG.theme`:
@@ -111,6 +153,7 @@ Zum Ausprobieren hängst du die Uhrzeit an die Adresse an, z. B. `index.html?tim
 | `D` | Türklingel testen |
 | `A` | Testalarm |
 | `L` | Lüften-Hinweis testen |
+| `P` | Zwischen Hauptseite und ruhiger Ansicht wechseln |
 | `Esc` | Klingel-Anzeige schließen |
 
 ## Anwesenheit und Display aus
@@ -197,6 +240,8 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Kein Klingel-Kamerabild | `pi-stats.py` mit `HA_URL` und `HA_TOKEN` starten, `doorbell.camera` prüfen |
 | Wetter-Vorschau bleibt leer | Die Wetter-Entity muss `weather.get_forecasts` unterstützen (stündlich oder täglich), `weather.entity` muss gesetzt sein |
 | Batterie fehlt in der Warnung | Der Sensor hat keine Geräteklasse `battery`: bei `battery.extra` von Hand eintragen. Wird er ausgeblendet, prüfe `exclude` |
+| „Keine Daten seit …“ | Home Assistant antwortet nicht mehr: Adresse, Netzwerk und Token prüfen. Die Seite verbindet sich selbst neu |
+| Steuerung fehlt am Handy | Die Seite mit `?control` öffnen und prüfen, ob `controls` Einträge hat |
 | Display geht nie aus | Prüfen, ob alle Personen in `people` `not_home` sind, ob `pi-stats.py` läuft und ob der Befehl passt: `curl 'localhost:8765/display?state=off'` |
 | Bildschirm dimmt nie | Es braucht mindestens einen Bewegungsmelder in `rooms` oder eine Person in `people`. Mit `onlyNight: false` dimmt es auch tagsüber |
 | Lüften-Empfehlung fehlt | Bei den Fenstern in `windows` den passenden Raum als `plan` angeben, damit offene Fenster erkannt werden |
