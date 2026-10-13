@@ -128,6 +128,8 @@
   .chip.lamp.on{color:var(--warm);background:rgba(255,211,122,.13);border-color:rgba(255,211,122,.3)}
   .chip.win.open{color:var(--warn);background:var(--warn-soft);border-color:rgba(255,184,77,.35)}
   .chip.win.closed{color:var(--ok);background:var(--ok-soft);border-color:transparent}
+  .chip.win.warn{color:var(--bad);background:var(--bad-soft);border-color:rgba(255,93,108,.45);animation:chipPulse 1.6s ease-in-out infinite}
+  @keyframes chipPulse{50%{box-shadow:0 0 0 5px var(--bad-soft)}}
   .chip.play.on{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 
   /* ---------- Läuft gerade ---------- */
@@ -168,6 +170,7 @@
   .toasts{position:fixed;right:20px;bottom:20px;z-index:20;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
   .toast{background:var(--surface);border:1px solid var(--border2);border-left:4px solid var(--warn);border-radius:14px;
     padding:12px 16px;box-shadow:0 20px 40px -16px rgba(0,0,0,.6);max-width:320px;animation:slide .35s ease both}
+  .toast.bad{border-left-color:var(--bad)}
   .toast b{display:block;font-size:14px} .toast span{font-size:12.5px;color:var(--muted)}
 
   .door{position:fixed;inset:0;z-index:28;background:rgba(5,7,10,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
@@ -340,6 +343,12 @@
       { name: 'Küche',        entity: 'binary_sensor.fenster_kueche',       x: 487, y: 420, dir: 'v' },
       { name: 'Balkontür',    entity: 'binary_sensor.balkontuer',           x: 312, y: 465, dir: 'h' }
     ],
+
+    // WARNUNG bei offenem Fenster: bei Regen, Schnee, Hagel oder Gewitter (aus der Wetter-Entity unten)
+    // und/oder wenn es draußen kälter ist als "coldBelow" °C. Die Fenster-Anzeige wird rot,
+    // offene Fenster pulsieren im Grundriss, und alle "repeatMin" Minuten kommt ein Hinweis.
+    // rainSensor ist optional (z. B. ein Regensensor als binary_sensor). coldBelow: null = aus.
+    windowWarn: { rain: true, rainSensor: '', coldBelow: 3, repeatMin: 30 },
 
     // LÄUFT GERADE: Musik- und Videoplayer (media_player.*) mit Titel und Cover.
     // x/y/plan sind optional und zeigen ein Notensymbol im Grundriss, solange etwas spielt.
@@ -578,7 +587,7 @@
         g.fillText(ROOMS[id].a + ' m²', cx, cy + f1*1.25);
       }
     }
-    drawMarkers(g,X,Y,sc,t,f1,{muted,warn,warm,accent,wall,text,bg:cssv('--surface')});
+    drawMarkers(g,X,Y,sc,t,f1,{muted,warn:WINWARN ? bad : warn,warm,accent,wall,text,bg:cssv('--surface')});
   }
 
   /* Lampen, Fenster und Medien im Grundriss */
@@ -688,13 +697,39 @@
     CONFIG.rooms.forEach(r => { if (r.light && isOn(r.light) && !seen.has(r.light)){ seen.add(r.light); out.push(r.name); } });
     return out;
   }
+  /* Warnung: Fenster offen bei Regen oder Kälte */
+  const WW = Object.assign({rain:true, rainSensor:'', coldBelow:null, repeatMin:30}, CONFIG.windowWarn || {});
+  if (WW.rainSensor) addW(WW.rainSensor, 'regen');
+  let WINWARN = null, winWarnAt = 0, winWarnKey = '';
+  function weatherReason(){
+    if (WW.rain){
+      const c = WX.entity ? String(values[WX.entity] || '') : '';
+      if (/rain|pour|lightning|hail/.test(c)) return 'Regen';
+      if (/snow/.test(c)) return 'Schnee';
+      if (WW.rainSensor && values[WW.rainSensor] === 'on') return 'Regen';
+    }
+    const a = WX.entity ? (attrs[WX.entity] || {}) : {};
+    if (WW.coldBelow != null && a.temperature != null && a.temperature < WW.coldBelow) return 'Kälte (' + Math.round(a.temperature) + ' °C)';
+    return null;
+  }
+  function checkWindowWarn(){
+    const open = WINS.filter(w => isOpen(w.entity)).map(w => w.name), why = open.length ? weatherReason() : null;
+    WINWARN = why ? {why, open} : null;
+    if (!WINWARN){ winWarnKey = ''; winWarnAt = 0; return; }
+    const key = why + '|' + open.join(','), now = Date.now();
+    if (key !== winWarnKey || now - winWarnAt > WW.repeatMin*60000){
+      if (key !== winWarnKey) push('Fenster offen bei ' + why + ': ' + names(open,4), 'a');
+      toast('Fenster schließen!', names(open,4) + ' offen bei ' + why + '.', 15000, 'bad');
+      winWarnKey = key; winWarnAt = now;
+    }
+  }
   function renderChips(){
     const on = lampsOn(), open = WINS.filter(w => isOpen(w.entity)).map(w => w.name);
-    const sig = JSON.stringify([on, open, !!LAMPS.length, !!WINS.length]);
+    const sig = JSON.stringify([on, open, !!LAMPS.length, !!WINS.length, WINWARN && WINWARN.why]);
     if (sig === chipSig) return; chipSig = sig;
     chipsEl.textContent = '';
     if (LAMPS.length || CONFIG.rooms.some(r => r.light)) chipsEl.appendChild(on.length ? mkChip('lamp on', IC.bulb, 'Licht an: ' + names(on,3)) : mkChip('lamp', IC.bulb, 'Alle Lichter aus'));
-    if (WINS.length) chipsEl.appendChild(open.length ? mkChip('win open', IC.win, 'Offen: ' + names(open,3)) : mkChip('win closed', IC.win, 'Alles geschlossen'));
+    if (WINS.length) chipsEl.appendChild(WINWARN ? mkChip('win warn', IC.win, WINWARN.why + ': Fenster offen (' + names(open,3) + ')') : open.length ? mkChip('win open', IC.win, 'Offen: ' + names(open,3)) : mkChip('win closed', IC.win, 'Alles geschlossen'));
     chipsEl.style.display = chipsEl.children.length ? '' : 'none';
   }
   function devRunning(d){
@@ -770,7 +805,7 @@
     });
     LAMPS.forEach(l => { if (isOn(l.entity) && l.plan && ROOMS[l.plan]){ const e = planVals[l.plan] || (planVals[l.plan] = {t:null}); e.light = true; } });
     activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
-    renderChips(); renderNow();
+    checkWindowWarn(); renderChips(); renderNow();
   }
   render(); setInterval(render, 1000);
 
@@ -787,8 +822,8 @@
   push('Dashboard gestartet');
 
   /* ---------- Toasts ---------- */
-  function toast(title, text, life){
-    const el = document.createElement('div'); el.className = 'toast';
+  function toast(title, text, life, cls){
+    const el = document.createElement('div'); el.className = 'toast' + (cls ? ' ' + cls : '');
     const b = document.createElement('b'), s = document.createElement('span');
     b.textContent = title; s.textContent = text; el.append(b,s); $('toasts').appendChild(el);
     setTimeout(() => { el.style.transition = 'opacity .3s'; el.style.opacity = 0; setTimeout(() => el.remove(), 320); }, life || 8000);

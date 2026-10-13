@@ -7,6 +7,7 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - Räume mit Temperatur, Luftfeuchte, CO₂, Licht und Bewegung
 - Einen Grundriss mit allen **Lampen** (an/aus), **Fenstern** (offen/zu) und dem, was gerade **läuft** (Musik)
 - **Läuft gerade:** Musik mit Titel und Cover sowie laufende Geräte (Waschmaschine usw.)
+- **Fenster-Warnung:** Steht ein Fenster offen und es regnet, schneit oder ist zu kalt, wird die Anzeige rot, und es kommt ein Hinweis
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
 - Luftqualität, Termine, Müllabfuhr, Pi-hole, Netzwerkverkehr und Pi-Systemwerte
@@ -42,6 +43,7 @@ In Home Assistant: **Profil** (unten links) → **Sicherheit** → **Langzeit-Zu
 | `rooms` | Räume mit Temperatur-, Feuchte-, Bewegungs-, Licht- und CO₂-Sensor |
 | `lights` | Lampen mit Position im Grundriss |
 | `windows` | Fenster- und Türkontakte mit Position im Grundriss |
+| `windowWarn` | Warnung bei offenem Fenster: Regen/Schnee, Kälte unter `coldBelow` °C, Wiederholung alle `repeatMin` Minuten |
 | `media` / `devices` | Musikplayer und Geräte für „Läuft gerade“ |
 | `alarms` | Rauch-, Wasser- und Türmelder |
 | `pihole`, `weather`, `calendars`, `garbage` | Optionale Info-Kacheln |
@@ -158,4 +160,5 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Werte zeigen `–` | Entity-ID falsch geschrieben, in Home Assistant prüfen |
 | Lampe oder Fenster erscheint nicht im Grundriss | `x`/`y` prüfen, im Grundriss klicken liefert die Koordinaten |
 | Kein Klingel-Kamerabild | `pi-stats.py` mit `HA_URL` und `HA_TOKEN` starten, `doorbell.camera` prüfen |
+| Keine Regen-Warnung | `weather.entity` muss gesetzt sein, optional `windowWarn.rainSensor` (z. B. ein Regensensor) |
 | Cover im „Läuft gerade“ fehlt | Der Player liefert kein `entity_picture`, dann erscheint ein Notensymbol |
