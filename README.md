@@ -8,6 +8,11 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - Einen Grundriss mit allen **Lampen** (an/aus), **Fenstern** (offen/zu) und dem, was gerade **läuft** (Musik)
 - **Läuft gerade:** Musik mit Titel und Cover sowie laufende Geräte (Waschmaschine usw.)
 - **Fenster-Warnung:** Steht ein Fenster offen und es regnet, schneit oder ist zu kalt, wird die Anzeige rot, und es kommt ein Hinweis
+- **Anwesenheit:** Wer ist zu Hause. Sind alle unterwegs, warnt das Dashboard vor offenen Fenstern und eingeschalteten Lichtern
+- **Wetter-Vorschau:** Die nächsten Stunden mit Temperatur und Regenwahrscheinlichkeit. Kündigt sich Regen an, warnt die Fensterwarnung schon vorher („Regen bald“)
+- **Batterie-Warnung:** Findet alle Batterie-Sensoren in Home Assistant selbst und warnt unter 20 %
+- **Lüften-Empfehlung:** Bei hohem CO₂ oder hoher Luftfeuchte, wenn es draußen passt und im Raum kein Fenster offen ist
+- **Bildschirm dimmen:** Nachts ohne Bewegung dunkelt das Display ab und wird bei Bewegung, Alarm, Klingel oder Berührung sofort wieder hell
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
 - Luftqualität, Termine, Müllabfuhr, Pi-hole, Netzwerkverkehr und Pi-Systemwerte
@@ -44,6 +49,11 @@ In Home Assistant: **Profil** (unten links) → **Sicherheit** → **Langzeit-Zu
 | `lights` | Lampen mit Position im Grundriss |
 | `windows` | Fenster- und Türkontakte mit Position im Grundriss |
 | `windowWarn` | Warnung bei offenem Fenster: Regen/Schnee, Kälte unter `coldBelow` °C, Wiederholung alle `repeatMin` Minuten |
+| `people` | Personen (`person.*`) für die Anwesenheit |
+| `forecast` | Wetter-Vorschau: Anzahl der Stunden und Aktualisierung |
+| `battery` | Schwellwert `warn` in %, `exclude` (z. B. Handy-Akkus) und `extra` für Sensoren von Hand |
+| `ventilate` | Lüften-Empfehlung, `minOutside` = kälteste Außentemperatur dafür |
+| `dim` | Bildschirm dimmen: `afterMin`, `level` (0 bis 1), `onlyNight` |
 | `media` / `devices` | Musikplayer und Geräte für „Läuft gerade“ |
 | `alarms` | Rauch-, Wasser- und Türmelder |
 | `pihole`, `weather`, `calendars`, `garbage` | Optionale Info-Kacheln |
@@ -160,5 +170,9 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Werte zeigen `–` | Entity-ID falsch geschrieben, in Home Assistant prüfen |
 | Lampe oder Fenster erscheint nicht im Grundriss | `x`/`y` prüfen, im Grundriss klicken liefert die Koordinaten |
 | Kein Klingel-Kamerabild | `pi-stats.py` mit `HA_URL` und `HA_TOKEN` starten, `doorbell.camera` prüfen |
+| Wetter-Vorschau bleibt leer | Die Wetter-Entity muss `weather.get_forecasts` unterstützen (stündlich oder täglich), `weather.entity` muss gesetzt sein |
+| Batterie fehlt in der Warnung | Der Sensor hat keine Geräteklasse `battery`: bei `battery.extra` von Hand eintragen. Wird er ausgeblendet, prüfe `exclude` |
+| Bildschirm dimmt nie | Es braucht mindestens einen Bewegungsmelder in `rooms` oder eine Person in `people`. Mit `onlyNight: false` dimmt es auch tagsüber |
+| Lüften-Empfehlung fehlt | Bei den Fenstern in `windows` den passenden Raum als `plan` angeben, damit offene Fenster erkannt werden |
 | Keine Regen-Warnung | `weather.entity` muss gesetzt sein, optional `windowWarn.rainSensor` (z. B. ein Regensensor) |
 | Cover im „Läuft gerade“ fehlt | Der Player liefert kein `entity_picture`, dann erscheint ein Notensymbol |

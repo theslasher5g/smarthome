@@ -132,6 +132,30 @@
   @keyframes chipPulse{50%{box-shadow:0 0 0 5px var(--bad-soft)}}
   .chip.play.on{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 
+  .chip.vent{color:var(--accent);background:var(--accent-soft);border-color:transparent}
+
+  /* ---------- Anwesenheit ---------- */
+  .people{display:flex;gap:10px;flex-wrap:wrap}
+  .pp{display:flex;align-items:center;gap:10px;padding:7px 14px 7px 7px;border-radius:999px;background:var(--surface2);border:1px solid var(--border);min-width:0}
+  .av{width:34px;height:34px;border-radius:50%;background:var(--surface3) center/cover no-repeat;display:grid;place-items:center;
+    font-size:13px;font-weight:650;color:var(--muted);flex:none;position:relative}
+  .pp.home .av{box-shadow:0 0 0 2px var(--ok)}
+  .pp b{display:block;font-size:13.5px;font-weight:600;line-height:1.2}
+  .pp span{display:block;font-size:11.5px;color:var(--muted);line-height:1.2}
+  .pp.home span{color:var(--ok)}
+
+  /* ---------- Wetter-Vorschau ---------- */
+  .fc{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;overflow:hidden}
+  .fh{text-align:center;padding:8px 2px;border-radius:12px;min-width:0}
+  .fh.rain{background:var(--accent-soft)}
+  .fh time{display:block;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .fh svg{width:24px;height:24px;margin:6px auto 5px;display:block;color:var(--accent)}
+  .fh b{display:block;font-size:14px;font-weight:600}
+  .fh small{display:block;margin-top:2px;font-size:11px;color:var(--accent);min-height:13px}
+
+  /* ---------- Display dimmen ---------- */
+  .dim{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:60;transition:opacity 4s ease}
+
   /* ---------- Läuft gerade ---------- */
   .now{display:flex;flex-direction:column;gap:10px;overflow:auto;min-height:0;scrollbar-width:none}
   .now::-webkit-scrollbar{display:none}
@@ -219,6 +243,14 @@
         <h2>Räume <em id="roomcount"></em></h2>
         <div id="rooms"></div>
       </section>
+      <section class="card" id="peoplecard" style="display:none">
+        <h2>Anwesenheit <em id="peoplecount"></em></h2>
+        <div class="people" id="people"></div>
+      </section>
+      <section class="card" id="fccard" style="display:none">
+        <h2>Wetter <em id="fcnow"></em></h2>
+        <div class="fc" id="fc"></div>
+      </section>
     </div>
 
     <div class="col">
@@ -261,6 +293,7 @@
 </div>
 
 <div class="alarmfx" id="alarmfx"></div>
+<div class="dim" id="dim"></div>
 <div class="alarm" id="alarm" role="alert">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>
   <div class="items" id="alarmitems"></div>
@@ -336,12 +369,12 @@
     // FENSTER (und Türen) mit Kontaktsensor: "on" = offen. Sie erscheinen als Balken in der Wand,
     // offene Fenster leuchten orange und schwingen auf. dir: 'v' = Wand läuft senkrecht, 'h' = waagerecht.
     windows: [
-      { name: 'Wohnzimmer',   entity: 'binary_sensor.fenster_wohnzimmer',   x: 101, y: 375, dir: 'v' },
-      { name: 'Schlafzimmer', entity: 'binary_sensor.fenster_schlafzimmer', x: 101, y: 120, dir: 'v' },
-      { name: 'Büro',         entity: 'binary_sensor.fenster_buero',        x: 101, y: 237, dir: 'v' },
-      { name: 'Bad',          entity: 'binary_sensor.fenster_bad',          x: 487, y: 110, dir: 'v' },
-      { name: 'Küche',        entity: 'binary_sensor.fenster_kueche',       x: 487, y: 420, dir: 'v' },
-      { name: 'Balkontür',    entity: 'binary_sensor.balkontuer',           x: 312, y: 465, dir: 'h' }
+      { name: 'Wohnzimmer',   entity: 'binary_sensor.fenster_wohnzimmer', plan: 'wohnen',   x: 101, y: 375, dir: 'v' },
+      { name: 'Schlafzimmer', entity: 'binary_sensor.fenster_schlafzimmer', plan: 'z1', x: 101, y: 120, dir: 'v' },
+      { name: 'Büro',         entity: 'binary_sensor.fenster_buero', plan: 'z2',        x: 101, y: 237, dir: 'v' },
+      { name: 'Bad',          entity: 'binary_sensor.fenster_bad', plan: 'bad',          x: 487, y: 110, dir: 'v' },
+      { name: 'Küche',        entity: 'binary_sensor.fenster_kueche', plan: 'kueche',       x: 487, y: 420, dir: 'v' },
+      { name: 'Balkontür',    entity: 'binary_sensor.balkontuer', plan: 'wohnen',           x: 312, y: 465, dir: 'h' }
     ],
 
     // WARNUNG bei offenem Fenster: bei Regen, Schnee, Hagel oder Gewitter (aus der Wetter-Entity unten)
@@ -349,6 +382,30 @@
     // offene Fenster pulsieren im Grundriss, und alle "repeatMin" Minuten kommt ein Hinweis.
     // rainSensor ist optional (z. B. ein Regensensor als binary_sensor). coldBelow: null = aus.
     windowWarn: { rain: true, rainSensor: '', coldBelow: 3, repeatMin: 30 },
+
+    // ANWESENHEIT: Personen (person.* oder device_tracker.*). Sind alle unterwegs, warnt das Dashboard
+    // vor offenen Fenstern und eingeschalteten Lichtern.
+    people: [
+      { name: 'Timo', entity: 'person.timo' },
+      { name: 'Anna', entity: 'person.anna' }
+    ],
+
+    // WETTER-VORSCHAU: stündlich (sonst täglich) aus der Wetter-Entity unten. Kündigt sich Regen an,
+    // warnt die Fensterwarnung schon vorher ("Regen bald").
+    forecast: { enabled: true, hours: 6, refreshMin: 30 },
+
+    // BATTERIEN: "auto" findet alle Sensoren mit Geräteklasse "battery" selbst. Unter "warn" Prozent wird gewarnt.
+    // exclude: Teile von Entity-IDs, die ignoriert werden (z. B. Handy-Akkus). extra: weitere Sensoren von Hand.
+    battery: { auto: true, warn: 20, exclude: ['phone', 'handy', 'iphone', 'pixel', 'ipad'], extra: [] },
+
+    // LÜFTEN: empfiehlt Lüften bei hohem CO2 oder hoher Luftfeuchte, wenn es draußen passt
+    // (kein Regen, nicht kälter als minOutside °C) und im Raum kein Fenster offen ist.
+    ventilate: { enabled: true, minOutside: 3 },
+
+    // BILDSCHIRM DIMMEN: wird es dunkel (siehe theme) und gibt es afterMin Minuten keine Bewegung
+    // (Bewegungsmelder aus "rooms") und keine Berührung, wird das Display abgedunkelt. level: 0 bis 1.
+    // Bewegung, Alarm, Klingel oder Berühren machen es sofort wieder hell. Auch wenn alle unterwegs sind.
+    dim: { enabled: true, afterMin: 5, level: 0.82, onlyNight: true },
 
     // LÄUFT GERADE: Musik- und Videoplayer (media_player.*) mit Titel und Cover.
     // x/y/plan sind optional und zeigen ein Notensymbol im Grundriss, solange etwas spielt.
@@ -490,6 +547,8 @@
     air:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 4.6A2 2 0 1 1 11 8H2M12.6 19.4A2 2 0 1 0 14 16H2M17.7 7.7A2.5 2.5 0 1 1 19.5 12H2"/></svg>',
     cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
     bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
+    user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
+    batt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 11v2"/></svg>',
     bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.6.5 1 1.2 1 2V17h6v-.9c0-.8.4-1.5 1-2A6.5 6.5 0 0 0 12 2.5z"/></svg>',
     win:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M12 3v18M4 12h16"/></svg>',
     note:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
@@ -697,6 +756,163 @@
     CONFIG.rooms.forEach(r => { if (r.light && isOn(r.light) && !seen.has(r.light)){ seen.add(r.light); out.push(r.name); } });
     return out;
   }
+  /* ---------- Anwesenheit ---------- */
+  const PEOPLE = CONFIG.people || [];
+  PEOPLE.forEach(pp => addW(pp.entity, pp.name));
+  const peopleEl = $('people');
+  let peopleSig = '';
+  const pState = pp => values[pp.entity];
+  const everyoneAway = () => PEOPLE.length > 0 && PEOPLE.every(pp => { const v = pState(pp); return v != null && v !== 'home' && v !== 'unknown' && v !== 'unavailable'; });
+  function renderPeople(){
+    $('peoplecard').style.display = PEOPLE.length ? '' : 'none';
+    if (!PEOPLE.length) return;
+    const items = PEOPLE.map(pp => { const v = pState(pp), a = attrs[pp.entity] || {};
+      return {n:pp.name, v:v == null ? '–' : v === 'home' ? 'Zuhause' : v === 'not_home' ? 'Unterwegs' : String(v).replace(/_/g,' '), home:v === 'home', pic:picUrl(a)}; });
+    const sig = JSON.stringify(items); if (sig === peopleSig) return; peopleSig = sig;
+    peopleEl.textContent = '';
+    items.forEach(it => {
+      const el = document.createElement('div'); el.className = 'pp' + (it.home ? ' home' : '');
+      const av = document.createElement('div'); av.className = 'av';
+      if (it.pic) av.style.backgroundImage = 'url("' + it.pic.replace(/"/g,'%22') + '")'; else av.textContent = it.n.slice(0,1).toUpperCase();
+      const tx = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
+      b.textContent = it.n; sp.textContent = it.v; tx.append(b,sp); el.append(av,tx); peopleEl.appendChild(el);
+    });
+    $('peoplecount').textContent = items.filter(i => i.home).length + ' von ' + items.length + ' zuhause';
+  }
+  function awayIssues(){
+    if (!everyoneAway()) return null;
+    const out = [], nOpen = WINS.filter(w => isOpen(w.entity)).length, nOn = lampsOn().length;
+    if (nOpen) out.push(nOpen + (nOpen === 1 ? ' Fenster offen' : ' Fenster offen'));
+    if (nOn) out.push(nOn + (nOn === 1 ? ' Licht an' : ' Lichter an'));
+    return out.length ? out : null;
+  }
+  let awayKey = '';
+  function checkAway(){
+    const a = awayIssues(), key = a ? a.join('|') : '';
+    if (key && key !== awayKey) toast('Alle sind unterwegs', a.join(', ') + '.', 15000, 'bad');
+    awayKey = key;
+  }
+
+  /* ---------- Wetter-Vorschau ---------- */
+  const FC = Object.assign({enabled:true, hours:6, refreshMin:30}, CONFIG.forecast || {});
+  let forecast = [], fcType = 'hourly', fcSig = '';
+  const CI = {
+    sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+    cloud:'<path d="M7 18a4 4 0 0 1-.5-8A6 6 0 0 1 18 9.5 4.3 4.3 0 0 1 17.5 18z"/>',
+    rain:'<path d="M7 14a4 4 0 0 1-.5-8A6 6 0 0 1 18 5.5 4.3 4.3 0 0 1 17.5 14z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/>',
+    snow:'<path d="M7 14a4 4 0 0 1-.5-8A6 6 0 0 1 18 5.5 4.3 4.3 0 0 1 17.5 14z"/><path d="M8 18h.01M12 19h.01M16 18h.01M10 21h.01M14 21h.01"/>',
+    bolt:'<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+    fog:'<path d="M4 8h16M4 12h16M7 16h10"/>'
+  };
+  function condKey(c, night){
+    c = String(c || '');
+    if (c === 'sunny') return 'sun'; if (c === 'clear-night') return 'moon';
+    if (/lightning/.test(c)) return 'bolt'; if (/rain|pour/.test(c) && !/snow/.test(c)) return 'rain';
+    if (/snow|hail/.test(c)) return 'snow'; if (c === 'fog') return 'fog';
+    return night ? 'cloud' : 'cloud';
+  }
+  const condSvg = (c, night) => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + CI[condKey(c,night)] + '</svg>';
+  const isRainCond = c => /rain|pour|lightning|hail|snow/.test(String(c || ''));
+  function rainSoon(){
+    if (fcType !== 'hourly') return null;
+    for (let i = 0; i < Math.min(3, forecast.length); i++){
+      const f = forecast[i];
+      if (isRainCond(f.condition) || (f.precipitation_probability != null && f.precipitation_probability >= 60)) return i === 0 ? 'jetzt' : 'in ca. ' + i + ' Std';
+    }
+    return null;
+  }
+  function requestForecast(){
+    if (!FC.enabled || !WX.entity || !ws || ws.readyState !== 1) return;
+    ws.send(JSON.stringify({id:3, type:'call_service', domain:'weather', service:'get_forecasts', service_data:{type:fcType},
+      target:{entity_id:WX.entity}, return_response:true}));
+  }
+  function gotForecast(m){
+    if (!m.success){ if (fcType === 'hourly'){ fcType = 'daily'; requestForecast(); } return; }
+    const r = m.result && m.result.response && m.result.response[WX.entity];
+    if (r && Array.isArray(r.forecast)){ forecast = r.forecast; renderForecast(); render(); }
+  }
+  function renderForecast(){
+    const card = $('fccard');
+    card.style.display = FC.enabled && WX.entity && (WX.entity in values) ? '' : 'none';
+    if (card.style.display === 'none') return;
+    const a = attrs[WX.entity] || {}, c = String(values[WX.entity]);
+    $('fcnow').textContent = (a.temperature != null ? Math.round(a.temperature) + ' °C · ' : '') + (COND[c] || c);
+    const now = Date.now(), list = forecast.filter(f => new Date(f.datetime).getTime() > now - 3600000).slice(0, fcType === 'hourly' ? FC.hours : Math.min(FC.hours, 6));
+    const sig = JSON.stringify([list, fcType]); if (sig === fcSig) return; fcSig = sig;
+    const el = $('fc'); el.textContent = '';
+    if (!list.length){ const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'Keine Vorschau verfügbar.'; el.appendChild(e); return; }
+    list.forEach(f => {
+      const d = new Date(f.datetime), h = d.getHours(), night = h < 6 || h >= 21;
+      const col = document.createElement('div'); col.className = 'fh' + (isRainCond(f.condition) ? ' rain' : '');
+      const tm = document.createElement('time'); tm.textContent = fcType === 'hourly' ? p2(h) + ' Uhr' : WD[d.getDay()];
+      const ic = document.createElement('div'); ic.innerHTML = condSvg(f.condition, night);
+      const t = document.createElement('b'); t.textContent = f.temperature != null ? Math.round(f.temperature) + '°' : '–';
+      const pr = document.createElement('small'); pr.textContent = f.precipitation_probability ? f.precipitation_probability + ' %' : (f.precipitation ? f.precipitation + ' mm' : '');
+      col.append(tm, ic.firstChild, t, pr); el.appendChild(col);
+    });
+  }
+  if (FC.enabled) setInterval(requestForecast, Math.max(5, FC.refreshMin)*60000);
+
+  /* ---------- Batterien ---------- */
+  const BAT = Object.assign({auto:true, warn:20, exclude:[], extra:[]}, CONFIG.battery || {});
+  const batt = new Map(), battNotice = {};
+  (BAT.extra || []).forEach(b => { addW(b.entity, b.name); batt.set(b.entity, {name:b.name, bin:b.entity.indexOf('binary_sensor.') === 0}); });
+  function discoverBattery(s){
+    const a = s.attributes || {};
+    if (!BAT.auto || a.device_class !== 'battery' || batt.has(s.entity_id)) return;
+    if ((BAT.exclude || []).some(x => s.entity_id.toLowerCase().indexOf(String(x).toLowerCase()) >= 0)) return;
+    const name = String(a.friendly_name || s.entity_id).replace(/\s*(battery|batterie|akku)(\s*(level|stand|status))?\s*$/i, '').trim() || s.entity_id;
+    batt.set(s.entity_id, {name, bin:s.entity_id.indexOf('binary_sensor.') === 0}); watched.set(s.entity_id, name);
+  }
+  function lowBatteries(){
+    const out = [];
+    batt.forEach((b, id) => {
+      const v = values[id]; if (v == null) return;
+      if (b.bin){ if (v === 'on') out.push({id, name:b.name, txt:'leer'}); return; }
+      const n = parseFloat(v); if (isFinite(n) && n <= BAT.warn) out.push({id, name:b.name, txt:Math.round(n) + ' %'});
+    });
+    return out.sort((a,b) => parseFloat(a.txt) - parseFloat(b.txt));
+  }
+  function checkBattery(){
+    const now = Date.now();
+    lowBatteries().forEach(b => { if (now - (battNotice[b.id] || 0) > 12*3600000){ battNotice[b.id] = now; toast('Batterie schwach', b.name + ' (' + b.txt + ')', 12000, 'bad'); push('Batterie schwach: ' + b.name + ' (' + b.txt + ')', 'w'); } });
+  }
+
+  /* ---------- Lüften ---------- */
+  const VENT = Object.assign({enabled:true, minOutside:3}, CONFIG.ventilate || {});
+  function ventilateInfo(){
+    const res = {list:[], ok:true, rainy:false, out:null};
+    if (!VENT.enabled) return res;
+    const a = WX.entity ? (attrs[WX.entity] || {}) : {}, c = WX.entity ? String(values[WX.entity] || '') : '';
+    res.out = a.temperature != null ? a.temperature : null; res.rainy = isRainCond(c);
+    res.ok = !res.rainy && (res.out == null || res.out >= VENT.minOutside);
+    rows.forEach(({r}) => {
+      const co2 = r.co2 ? parseFloat(values[r.co2]) : NaN, hum = parseFloat(values[r.hum]), why = [];
+      if (isFinite(co2) && co2 >= CONFIG.co2Warn) why.push('CO₂ ' + Math.round(co2));
+      if (isFinite(hum) && hum > CONFIG.humMax) why.push(Math.round(hum) + ' % Feuchte');
+      if (!why.length) return;
+      if (WINS.some(w => w.plan && w.plan === r.plan && isOpen(w.entity))) return;
+      res.list.push({name:r.name, why:why.join(', ')});
+    });
+    return res;
+  }
+
+  /* ---------- Bildschirm dimmen ---------- */
+  const DIM = Object.assign({enabled:true, afterMin:5, level:.82, onlyNight:true}, CONFIG.dim || {});
+  const dimEl = $('dim');
+  let lastAct = Date.now(), dimmed = false;
+  function wake(){ lastAct = Date.now(); if (dimmed){ dimmed = false; dimEl.style.opacity = 0; } }
+  ['pointerdown','keydown','touchstart'].forEach(ev => addEventListener(ev, wake, {passive:true}));
+  function dimCheck(){
+    if (!DIM.enabled) return;
+    const night = !DIM.onlyNight || lastDark >= .95, idle = Date.now() - lastAct > DIM.afterMin*60000;
+    const quiet = activeAlarms.size === 0 && Date.now() > doorUntil && !WINWARN;
+    const want = idle && quiet && (motionIds.size > 0 || PEOPLE.length > 0) && (night || everyoneAway());
+    if (want !== dimmed){ dimmed = want; dimEl.style.opacity = want ? DIM.level : 0; }
+  }
+  setInterval(dimCheck, 5000);
+
   /* Warnung: Fenster offen bei Regen oder Kälte */
   const WW = Object.assign({rain:true, rainSensor:'', coldBelow:null, repeatMin:30}, CONFIG.windowWarn || {});
   if (WW.rainSensor) addW(WW.rainSensor, 'regen');
@@ -708,6 +924,7 @@
       if (/snow/.test(c)) return 'Schnee';
       if (WW.rainSensor && values[WW.rainSensor] === 'on') return 'Regen';
     }
+    if (WW.rain){ const soon = rainSoon(); if (soon && soon !== 'jetzt') return 'Regen bald (' + soon + ')'; }
     const a = WX.entity ? (attrs[WX.entity] || {}) : {};
     if (WW.coldBelow != null && a.temperature != null && a.temperature < WW.coldBelow) return 'Kälte (' + Math.round(a.temperature) + ' °C)';
     return null;
@@ -723,14 +940,25 @@
       winWarnKey = key; winWarnAt = now;
     }
   }
+  function chipSpecs(){
+    const out = [], on = lampsOn(), open = WINS.filter(w => isOpen(w.entity)).map(w => w.name);
+    if (LAMPS.length || CONFIG.rooms.some(r => r.light)) out.push(on.length ? ['lamp on', IC.bulb, 'Licht an: ' + names(on,3)] : ['lamp', IC.bulb, 'Alle Lichter aus']);
+    if (WINS.length) out.push(WINWARN ? ['win warn', IC.win, WINWARN.why + ': Fenster offen (' + names(open,3) + ')'] : open.length ? ['win open', IC.win, 'Offen: ' + names(open,3)] : ['win closed', IC.win, 'Alles geschlossen']);
+    const aw = awayIssues(); if (aw) out.push(['win warn', IC.user, 'Alle unterwegs: ' + aw.join(', ')]);
+    const v = ventilateInfo();
+    if (v.list.length){
+      const l = names(v.list.map(x => x.name + ' (' + x.why + ')'), 2);
+      out.push(v.ok ? ['vent', IC.air, 'Lüften empfohlen: ' + l] : ['win open', IC.air, 'Luft schlecht: ' + l + ' – draußen ' + (v.rainy ? 'Regen' : Math.round(v.out) + ' °C') + ', nur kurz lüften']);
+    }
+    const lb = lowBatteries(); if (lb.length) out.push(['win open', IC.batt, 'Batterie schwach: ' + names(lb.map(x => x.name + ' (' + x.txt + ')'), 3)]);
+    return out;
+  }
   function renderChips(){
-    const on = lampsOn(), open = WINS.filter(w => isOpen(w.entity)).map(w => w.name);
-    const sig = JSON.stringify([on, open, !!LAMPS.length, !!WINS.length, WINWARN && WINWARN.why]);
+    const specs = chipSpecs(), sig = JSON.stringify(specs);
     if (sig === chipSig) return; chipSig = sig;
     chipsEl.textContent = '';
-    if (LAMPS.length || CONFIG.rooms.some(r => r.light)) chipsEl.appendChild(on.length ? mkChip('lamp on', IC.bulb, 'Licht an: ' + names(on,3)) : mkChip('lamp', IC.bulb, 'Alle Lichter aus'));
-    if (WINS.length) chipsEl.appendChild(WINWARN ? mkChip('win warn', IC.win, WINWARN.why + ': Fenster offen (' + names(open,3) + ')') : open.length ? mkChip('win open', IC.win, 'Offen: ' + names(open,3)) : mkChip('win closed', IC.win, 'Alles geschlossen'));
-    chipsEl.style.display = chipsEl.children.length ? '' : 'none';
+    specs.forEach(sp => chipsEl.appendChild(mkChip(sp[0], sp[1], sp[2])));
+    chipsEl.style.display = specs.length ? '' : 'none';
   }
   function devRunning(d){
     const v = values[d.entity]; if (v == null) return null;
@@ -805,7 +1033,7 @@
     });
     LAMPS.forEach(l => { if (isOn(l.entity) && l.plan && ROOMS[l.plan]){ const e = planVals[l.plan] || (planVals[l.plan] = {t:null}); e.light = true; } });
     activeAlarms.forEach(a => { if (a.plan && ROOMS[a.plan]){ const e = planVals[a.plan] || (planVals[a.plan] = {t:null}); e.alarm = true; } });
-    checkWindowWarn(); renderChips(); renderNow();
+    checkWindowWarn(); checkAway(); checkBattery(); renderPeople(); renderForecast(); renderChips(); renderNow();
   }
   render(); setInterval(render, 1000);
 
@@ -854,10 +1082,12 @@
         setLink('Verbunden','ok'); push('Home Assistant verbunden');
         ws.send(JSON.stringify({id:1, type:'get_states'}));
         ws.send(JSON.stringify({id:2, type:'subscribe_events', event_type:'state_changed'}));
+        requestForecast();
       } else if (m.type === 'auth_invalid'){
         authFailed = true; setLink('Token ungültig','bad'); push('Token abgelehnt','a');
       } else if (m.type === 'result' && m.id === 1 && m.success){
         m.result.forEach(s => {
+          discoverBattery(s);
           if (!watched.has(s.entity_id)) return;
           applyState(s.entity_id, s.state, s.attributes);
           logged[s.entity_id] = parseFloat(s.state);
@@ -865,17 +1095,20 @@
         });
         CONFIG.alarms.forEach(a => { if (values[a.entity] === (a.on || 'on')) alarmOn(a); });
         render(); infoTick();
+      } else if (m.type === 'result' && m.id === 3){
+        gotForecast(m);
       } else if (m.type === 'event' && m.id === 2){
         const d = m.event && m.event.data;
         if (!(d && d.new_state && watched.has(d.entity_id))) return;
         const id = d.entity_id, v = d.new_state.state, old = d.old_state ? d.old_state.state : null, name = String(watched.get(id));
         applyState(id, v, d.new_state.attributes);
         if (motionIds.has(id) && v === 'on'){
-          motionUntil[id] = Date.now() + (CONFIG.motionHoldSec||20)*1000;
+          motionUntil[id] = Date.now() + (CONFIG.motionHoldSec||20)*1000; wake();
           if (Date.now() - (lastLog[id]||0) > 60000){ lastLog[id] = Date.now(); push('Bewegung: ' + name); }
         }
         if (lightIds.has(id) && old !== v && (v === 'on' || v === 'off')) push('Licht ' + (v === 'on' ? 'an' : 'aus') + ': ' + name);
         if (winIds.has(id) && old !== v && old != null){ const op = v === 'on' || v === 'open'; push('Fenster ' + (op ? 'geöffnet' : 'geschlossen') + ': ' + name, op ? 'w' : ''); }
+        if (PEOPLE.some(pp => pp.entity === id) && old !== v && old != null) push(name + (v === 'home' ? ' ist zuhause' : ' ist unterwegs'));
         if (mediaIds.has(id) && old !== v && v === 'playing') push('Wiedergabe: ' + name);
         CONFIG.alarms.forEach(a => { if (a.entity === id){ v === (a.on || 'on') ? alarmOn(a) : alarmOff(id); } });
         if (DB.trigger === id){
@@ -1046,7 +1279,7 @@
   }
   function alarmOn(a){
     if (activeAlarms.has(a.entity)) return;
-    const d = new Date();
+    wake(); const d = new Date();
     activeAlarms.set(a.entity, Object.assign({}, a, {since: p2(d.getHours()) + ':' + p2(d.getMinutes())}));
     push('ALARM ' + a.title + ': ' + a.text, 'a'); renderAlarms(); render();
   }
@@ -1067,7 +1300,7 @@
   }
   doorEl.addEventListener('click', hideDoor);
   function showDoorbell(){
-    hideDoor();
+    wake(); hideDoor();
     const secs = DB.seconds || 15;
     doorStart = Date.now(); doorUntil = doorStart + secs*1000;
     const d = new Date(doorStart);
