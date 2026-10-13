@@ -39,4 +39,6 @@ Das Wand-Display (Raspberry Pi mit `index.html`) gehört ins **IoT-Netz**, dann 
 
 ## Dashboard und Netzwerk
 
+**Gäste-WLAN:** Das Dashboard zeigt für das Gäste-Netz (VLAN 40) einen QR-Code zum Verbinden, siehe Abschnitt „Gäste-WLAN (QR-Code)“ in der [Haupt-README](../README.md).
+
 Zurzeit zeigt das Dashboard den Netzwerkverkehr des Pi oder, wenn du die Entitäten einträgst, deines Routers (`CONFIG.net`). Cisco-Switches sprechen **SNMP**: Home Assistant kann damit den Durchsatz der VLAN-Schnittstellen und Ports lesen. Die Anbindung beschreibe ich, sobald du dein Switch-Modell und den Router festgelegt hast. Eine Anzeige pro Netz kommt danach.

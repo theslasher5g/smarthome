@@ -20,6 +20,7 @@ Ein modernes Wand-Dashboard für Home Assistant. Es besteht aus **einer einzigen
 - **Wartung:** Neustart der Seite jede Nacht und Burn-in-Schutz (Inhalt wandert minimal)
 - **Steuerung vom Handy:** Knöpfe für Licht, Szenen, Skripte, Schloss und Saugroboter (nur auf Touch-Geräten)
 - **Saugroboter:** Zustand und Akku von `vacuum.*`-Geräten (z. B. Dreame) unter „Läuft gerade“, mit Fehlermeldung
+- **Gäste-WLAN als QR-Code:** Gäste scannen ihn mit der Handy-Kamera und sind verbunden, ohne das Passwort zu tippen
 - **Homelab-Seite:** Hypervisoren, Synology-Speicher, Dienste, Backup und USV auf einer eigenen Seite, mit roter Warnzeile auf der Hauptseite bei Problemen
 - Alarme (Rauch, Wasser, Tür) mit rotem Banner und pulsierendem Rand
 - Türklingel mit Kamerabild im Vordergrund
@@ -67,6 +68,7 @@ In Home Assistant: **Profil** (unten links) → **Sicherheit** → **Langzeit-Zu
 | `maintenance` | Nächtlicher Neustart (`reloadAt`) und `burnIn` |
 | `pages` | Seiten-Wechsel: `mainSec` Hauptseite, `ambientSec` ruhige Ansicht |
 | `controls` | Knöpfe für die Steuerung vom Handy |
+| `guestWifi` | Gäste-WLAN: `ssid`, `password`, `encryption` (`WPA`, `WEP`, `nopass`), `hidden`, `showPassword` |
 | `homelab` | Homelab-Seite: `servers`, `nas`, `services`, `backup`, `ups` und `warn` |
 | `media` / `devices` | Musikplayer und Geräte für „Läuft gerade“ |
 | `alarms` | Rauch-, Wasser- und Türmelder |
@@ -148,6 +150,19 @@ Alles, was in Home Assistant als Entity auftaucht, kann das Dashboard anzeigen. 
 - **Waschmaschine, Trockner:** Eine Steckdose mit Leistungsmessung als `sensor.*` in `devices` mit `above: 5` (Watt) eintragen.
 - **Beliebige Sensoren:** Wenn du etwas Eigenes anzeigen willst, sag Bescheid oder schau dir `devices` und `controls` an.
 
+## Gäste-WLAN (QR-Code)
+
+Trage in `CONFIG.guestWifi` den Namen (SSID) und das Passwort deines Gäste-WLANs ein. Der QR-Code erscheint dann:
+- in der **ruhigen Ansicht** (rechts unten),
+- auf dem **Handy** als Karte „Gäste-WLAN“ (praktisch, um den Code einem Gast zu zeigen),
+- mit der Taste **`W`** groß im Vollbild.
+
+Gäste öffnen die Kamera, halten sie auf den Code, tippen auf den Vorschlag und sind verbunden. Das funktioniert mit iPhone und Android ohne App. Der Code ist immer schwarz auf weiß, auch im Dunkelmodus, damit er sich zuverlässig lesen lässt.
+
+> **Sicherheit:** Das Passwort steht im Klartext in `index.html` und, wenn `showPassword: true` ist, auf dem Display. Nutze dafür nur das **getrennte Gäste-Netz** (siehe [`netzwerk/`](netzwerk/README.md)), nie das Passwort deines privaten WLANs. Mit `showPassword: false` zeigt das Display nur den QR-Code.
+
+Die Erzeugung des Codes übernimmt die kleine Bibliothek *QR Code Generator for JavaScript* von Kazuhiko Arase (MIT-Lizenz), die komplett in `index.html` eingebettet ist. Es werden keine Daten ins Internet geschickt.
+
 ## Seiten der Wanddarstellung
 
 Die **Hauptseite** zeigt nur das Wichtigste: Räume mit Temperatur, den Grundriss mit Lampen und Fenstern, höchstens drei Hinweiszeilen (Warnungen zuerst) und unten eine Zeile mit Personen, Wetter und dem, was gerade läuft. Alles andere wechselt automatisch durch:
@@ -155,7 +170,7 @@ Die **Hauptseite** zeigt nur das Wichtigste: Räume mit Temperatur, den Grundris
 | Seite | Inhalt |
 |---|---|
 | Hauptseite | Räume, Grundriss, wichtigste Hinweise |
-| Ruhige Ansicht | Große Uhr, Wetter, Vorschau, Termin, Müll |
+| Ruhige Ansicht | Große Uhr, Wetter, Vorschau, Termin, Müll, Gäste-WLAN-QR-Code |
 | Übersicht | Alle Hinweise, Heute-Kacheln, Anwesenheit, Wetter-Vorschau, Läuft gerade, Netzwerk, System, Aktivität |
 | Homelab | Hypervisoren, NAS, Dienste, Backup, USV |
 
@@ -184,7 +199,8 @@ Zum Ausprobieren hängst du die Uhrzeit an die Adresse an, z. B. `index.html?tim
 | `D` | Türklingel testen |
 | `A` | Testalarm |
 | `L` | Lüften-Hinweis testen |
-| `P` | Nächste Seite: Hauptseite, ruhige Ansicht, Homelab |
+| `P` | Nächste Seite: Hauptseite, ruhige Ansicht, Übersicht, Homelab |
+| `W` | Gäste-WLAN-QR-Code groß im Vollbild (schließt nach 60 Sekunden oder mit `Esc`) |
 | `Esc` | Klingel-Anzeige schließen |
 
 ## Anwesenheit und Display aus
