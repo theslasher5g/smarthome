@@ -75,8 +75,11 @@
   .rm .t{font-size:clamp(22px,2.1vw,30px);font-weight:600;letter-spacing:-.03em;line-height:1;white-space:nowrap}
   .rm .h{font-size:16px;font-weight:500;color:var(--muted);white-space:nowrap;padding-bottom:3px}
   .rm .t.bad,.rm .h.bad{color:var(--bad)}
-  .rm .bar{grid-column:1/3;height:5px;border-radius:99px;background:var(--surface3);overflow:hidden;margin-top:3px}
-  .rm .bar b{display:block;height:100%;width:0;border-radius:99px;background:var(--accent);transition:width .8s ease}
+  .rm .bar{grid-column:1/3;position:relative;height:7px;border-radius:99px;background:var(--surface3);margin-top:8px}
+  .rm .bar u{position:absolute;top:0;bottom:0;border-radius:99px;background:var(--ok-soft);box-shadow:inset 0 0 0 1px rgba(61,220,151,.28)}
+  .rm .bar b{position:absolute;top:50%;left:0;width:13px;height:13px;border-radius:50%;background:var(--accent);border:2px solid var(--surface);
+    transform:translate(-50%,-50%);transition:left .8s ease,background .3s;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+  .rm .bar b.out{background:var(--bad)}
 
   /* ---------- Grundriss ---------- */
   .plan-card{flex:1.5}
@@ -170,6 +173,10 @@
   .ctlb:active{transform:scale(.97)}
   .ctlb b{font-size:14px;font-weight:600} .ctlb span{font-size:12px;color:var(--muted)}
   body.ctrl .col:first-child{order:-2}
+  .ctlb.busy{opacity:.65;pointer-events:none;position:relative}
+  .ctlb.busy::after{content:"";position:absolute;right:14px;top:14px;width:14px;height:14px;border-radius:50%;border:2px solid var(--border2);border-top-color:var(--accent);animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .ctlb.done span{color:var(--ok)}
   .ctlb.on{background:rgba(255,211,122,.14);border-color:rgba(255,211,122,.35)} .ctlb.on span{color:var(--warm)}
 
   /* ---------- Ruhige Ansicht (Seiten-Wechsel) ---------- */
@@ -196,11 +203,41 @@
   .ambient .chips{margin:0}
   @media (max-width:900px){.ambient{display:none}}
 
+  /* ---------- Ladezustand, Verbindungsfehler, Hilfe ---------- */
+  @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+  body.loading .rm .t,body.loading .rm .h,body.loading .tile .v,body.loading .tile .d,body.loading .fh b,body.loading .fh time,
+  body.loading .mb em,body.loading .stats b,body.loading .np .tt,body.loading .pp b,body.loading .pp span{
+    color:transparent!important;border-radius:8px;min-width:3.2ch;
+    background:linear-gradient(90deg,var(--surface3) 30%,var(--surface2) 50%,var(--surface3) 70%) 0 0/200% 100%;animation:shimmer 1.6s linear infinite}
+  body.loading .chips,body.loading .bdw,body.loading .foot>*{opacity:0}
+  body.loading .rm .bar b{opacity:0}
+  .conn{position:fixed;inset:0;z-index:18;display:grid;place-items:center;padding:24px;pointer-events:none}
+  .conn[hidden]{display:none}
+  .conn-card{pointer-events:auto;width:min(520px,100%);text-align:center;background:var(--surface);border:1px solid var(--border2);border-radius:28px;
+    padding:clamp(24px,3vw,40px);box-shadow:0 30px 80px -24px rgba(0,0,0,.55);animation:slide .4s ease both}
+  .conn-ic{width:56px;height:56px;margin:0 auto 14px;border-radius:18px;display:grid;place-items:center;background:var(--warn-soft);color:var(--warn)}
+  .conn-ic svg{width:28px;height:28px}
+  .conn-card h3{margin:0 0 8px;font-size:clamp(20px,2vw,26px);font-weight:650;letter-spacing:-.02em}
+  .conn-card p{margin:0;font-size:clamp(14px,1.3vw,17px);line-height:1.5;color:var(--muted);text-wrap:balance}
+  .conn-r{margin-top:16px;font-size:13px;color:var(--faint);font-variant-numeric:tabular-nums;min-height:18px}
+  .hint{font-size:clamp(12px,1.1vw,14px);color:var(--faint)}
+  .wifi-box.help{align-items:stretch;text-align:left;width:min(92vw,560px)}
+  .wifi-box.help h3{margin:0 0 6px;font-size:20px;font-weight:650;text-align:left}
+  .kb{display:grid;grid-template-columns:auto 1fr;gap:10px 18px;align-items:center;margin-top:8px}
+  .kb kbd{font:600 13px ui-monospace,Menlo,Consolas,monospace;min-width:34px;text-align:center;padding:5px 9px;border-radius:8px;background:var(--surface2);border:1px solid var(--border2);box-shadow:0 2px 0 var(--border2)}
+  .kb span{font-size:15px}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+  .chip.cfg{background:transparent;border:1px dashed var(--border2);color:var(--muted)}
+
   /* ---------- Wand-Layout: Hauptseite nur mit dem Wichtigsten ---------- */
   .foot{display:none}
   body.wall .app{grid-template-rows:auto minmax(0,1fr) auto}
   body.wall main{grid-template-columns:minmax(280px,.62fr) minmax(0,1.7fr)}
   body.wall .col:empty{display:none}
+  body.wall #rooms{display:grid;grid-template-rows:repeat(var(--n,4),minmax(0,1fr));gap:12px;overflow:visible}
+  body.wall .rm{align-content:center;row-gap:6px;padding:10px 18px}
+  body.wall .rm .t{font-size:clamp(28px,min(3.3vw,calc(34vh / var(--n,4))),56px)}
+  body.wall .rm .nm{font-size:clamp(14px,1.25vw,18px)} body.wall .rm .h{font-size:clamp(15px,1.4vw,20px)}
   body.wall .foot{display:flex;align-items:center;gap:clamp(14px,2.4vw,40px);padding:2px 6px;font-size:clamp(13px,1.15vw,16px);color:var(--muted);min-height:26px}
   .foot .fg{display:flex;align-items:center;gap:14px;min-width:0}
   .foot .fp{display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
@@ -425,7 +462,7 @@
 </div>
 
 <div class="ambient infopg" id="infopg">
-  <div class="lab-head"><h2>Übersicht</h2></div>
+  <div class="lab-head"><h2>Übersicht</h2><span class="hint">Taste ? zeigt die Tastenkürzel</span></div>
   <div class="chips" id="infochips"></div>
   <div class="info-cols"><div class="col"></div><div class="col"></div><div class="col"></div></div>
 </div>
@@ -447,6 +484,13 @@
   <div class="lab-srv" id="labsrv"></div>
   <div class="lab-grid"><div class="lc lab-nas" id="labnas"></div><div class="lab-side"><div class="lc" id="labsvc"></div><div class="lc" id="labmisc"></div></div></div>
 </div>
+<div class="conn" id="conn" hidden>
+  <div class="conn-card" role="alert">
+    <div class="conn-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01M3 3l18 18"/></svg></div>
+    <h3 id="conntitle"></h3><p id="conntext"></p><div class="conn-r" id="connretry"></div>
+  </div>
+</div>
+<div class="wifim" id="helpm"><div class="wifi-box help" id="helpbox"></div></div>
 <div class="alarmfx" id="alarmfx"></div>
 <div class="dim" id="dim"></div>
 <div class="alarm" id="alarm" role="alert">
@@ -760,10 +804,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (k === 't'){ modeIdx = (modeIdx + 1) % MODES.length; applyTheme(true); toast('Design', ['Automatisch (Tag/Nacht)','Immer dunkel','Immer hell'][modeIdx], 2500); }
     if (k === 'p' && !CTRL_MODE) setPage(pageIdx + 1);
     if (k === 'w') toggleWifi();
+    if (k === '?' || k === 'h') toggleHelp();
     if (k === 'd') showDoorbell();
     if (k === 'a') testAlarm();
     if (k === 'l') toast('Lüften!', 'CO2 1520 ppm im Büro. Bitte Fenster öffnen.', 12000);
-    if (k === 'escape'){ hideDoor(); hideWifi(); }
+    if (k === 'escape'){ hideDoor(); hideWifi(); $('helpm').classList.remove('show'); }
   });
 
   /* ---------- Hilfen ---------- */
@@ -786,6 +831,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
     bin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>',
     server:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/><path d="M7 7h.01M7 17h.01"/></svg>',
+    cfg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>',
     user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>',
     batt:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="17" height="10" rx="2"/><path d="M22 11v2M6 11v2"/></svg>',
     bulb:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 21.5h4M12 2.5a6.5 6.5 0 0 0-4 11.6c.6.5 1 1.2 1 2V17h6v-.9c0-.8.4-1.5 1-2A6.5 6.5 0 0 0 12 2.5z"/></svg>',
@@ -956,7 +1002,8 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     bw.append(bdM,bdL,bdC); n.append(nm,bw);
     const t = document.createElement('span'); t.className = 't'; t.textContent = '–';
     const h = document.createElement('span'); h.className = 'h'; h.textContent = '–';
-    const bar = document.createElement('i'); bar.className = 'bar'; const fill = document.createElement('b'); bar.appendChild(fill);
+    const bar = document.createElement('i'); bar.className = 'bar'; const zone = document.createElement('u'), fill = document.createElement('b');
+    zone.style.left = CONFIG.humMin + '%'; zone.style.width = (CONFIG.humMax - CONFIG.humMin) + '%'; bar.append(zone, fill);
     row.append(n,t,h,bar); roomsEl.appendChild(row);
     rows.push({r,row,t,h,fill,bdM,bdL,bdC});
     [r.temp,r.hum].forEach(id => { if (id){ watched.set(id,r.name); roomIds.add(id); } });
@@ -1015,7 +1062,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       const tx = document.createElement('div'), b = document.createElement('b'), sp = document.createElement('span');
       b.textContent = it.n; sp.textContent = it.v; tx.append(b,sp); el.append(av,tx); peopleEl.appendChild(el);
     });
-    $('peoplecount').textContent = items.filter(i => i.home).length + ' von ' + items.length + ' zuhause';
+    $('peoplecount').textContent = PEOPLE.every(pp => isKnown(pp.entity)) ? items.filter(i => i.home).length + ' von ' + items.length + ' zuhause' : '';
   }
   function awayIssues(){
     if (!everyoneAway()) return null;
@@ -1165,6 +1212,30 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   setInterval(dimCheck, 5000);
 
+  /* ---------- Verbindungsstatus, Ladezustand, Einrichtungs-Check ---------- */
+  const CONN_TIMEOUT = 8000;
+  let connState = CONFIG.token && CONFIG.token.indexOf('HIER_') !== 0 ? 'connecting' : 'noToken', dataReady = false, nextRetryAt = 0, connTimer = null;
+  const isKnown = id => !!id && values[id] != null && values[id] !== 'unavailable' && values[id] !== 'unknown';
+  let cfgMissing = [];
+  const CONN_TEXT = {
+    noToken:  ['Zugangstoken fehlt', 'Trage in index.html bei „token“ dein Langzeit-Zugriffstoken ein. Du erstellst es in Home Assistant unter Profil → Sicherheit.'],
+    authFail: ['Token abgelehnt', 'Home Assistant hat das Zugriffstoken nicht akzeptiert. Erstelle in Home Assistant ein neues Langzeit-Zugriffstoken und trage es in index.html ein.'],
+    failed:   ['Home Assistant nicht erreichbar', 'Prüfe die Adresse (' + CONFIG.url + '), das Netzwerk und ob Home Assistant läuft.']
+  };
+  function renderConn(){
+    const el = $('conn'), show = !dataReady && CONN_TEXT[connState] != null;
+    document.body.classList.toggle('loading', !dataReady && connState === 'connecting');
+    el.hidden = !show; if (!show) return;
+    $('conntitle').textContent = CONN_TEXT[connState][0]; $('conntext').textContent = CONN_TEXT[connState][1];
+    const left = Math.max(0, Math.ceil((nextRetryAt - Date.now())/1000));
+    $('connretry').textContent = connState === 'failed' ? (left > 0 ? 'Neuer Versuch in ' + left + ' s' : 'Verbinde …') : '';
+  }
+  setInterval(renderConn, 1000); renderConn();
+  function computeMissing(){
+    cfgMissing = Array.from(watched.keys()).filter(id => !(id in values));
+    if (cfgMissing.length){ push('Einrichtung: ' + cfgMissing.length + ' Entitäten in Home Assistant nicht gefunden', 'w'); try { console.warn('Nicht gefundene Entitäten:', cfgMissing); } catch(e){} }
+  }
+
   /* ---------- Gemeinsames: Nachrichten-IDs, Steuerung vom Handy, Wartung ---------- */
   let msgId = 10;
   const nid = () => ++msgId;                 // Home Assistant verlangt streng steigende IDs
@@ -1200,14 +1271,21 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
     if (!ws || ws.readyState !== 1){ toast('Keine Verbindung', 'Home Assistant ist nicht erreichbar.', 4000, 'bad'); return; }
     const sv = ctlService(c);
     if (sv[1] === 'unlock' && !confirm('Wirklich aufschließen: ' + c.name + '?')) return;
-    const id = nid(); calls.set(id, c.name);
+    const ent = ctlBtns.find(x => x.c === c), id = nid(); calls.set(id, {name:c.name, ent});
+    if (ent){ ent.busyUntil = Date.now() + 5000; ent.prev = values[c.entity]; ent.b.classList.add('busy'); }
     ws.send(JSON.stringify({id, type:'call_service', domain:sv[0], service:sv[1], target:{entity_id:c.entity}}));
     push('Gesteuert: ' + c.name);
   }
   function updateCtl(){
-    ctlBtns.forEach(({c, b, st}) => { const v = values[c.entity], dom = c.entity.split('.')[0];
-      const txt = (dom === 'scene' || dom === 'script' || dom === 'button') ? 'Ausführen' : (v == null ? '–' : CSTATE[v] || v);
-      st.textContent = txt; b.classList.toggle('on', CON.has(v) && dom !== 'scene' && dom !== 'script'); });
+    const now = Date.now();
+    ctlBtns.forEach(ent => { const {c, b, st} = ent, v = values[c.entity], dom = c.entity.split('.')[0], action = dom === 'scene' || dom === 'script' || dom === 'button' || dom === 'input_button';
+      if (ent.busyUntil){
+        if (!action && v !== ent.prev) ent.busyUntil = 0;                              // Zustand hat sich geändert: Befehl angekommen
+        else if (now >= ent.busyUntil){ ent.busyUntil = 0; if (!action) toast('Keine Reaktion', c.name + ' hat nicht reagiert. Ist das Gerät erreichbar?', 6000, 'bad'); }
+      }
+      b.classList.toggle('busy', !!ent.busyUntil); b.classList.toggle('done', ent.done > now);
+      st.textContent = ent.done > now ? 'Ausgeführt ✓' : action ? 'Ausführen' : (v == null ? '–' : CSTATE[v] || v);
+      b.classList.toggle('on', CON.has(v) && !action); });
   }
 
   // Wartung: nächtlicher Neustart der Seite und Burn-in-Schutz
@@ -1267,6 +1345,17 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (err && !vacErr[d.entity]){ const a = attrs[d.entity] || {}; toast(d.name + ': Fehler', String(a.error || a.status || 'Bitte nachsehen.'), 20000, 'bad'); push(d.name + ': Fehler', 'a'); }
       vacErr[d.entity] = err; });
   }
+
+  /* ---------- Hilfe: Tastenkürzel ---------- */
+  const KEYS = [['F','Vollbild an/aus'], ['T','Design wechseln: Automatisch, Dunkel, Hell'], ['P','Nächste Seite'], ['W','Gäste-WLAN als QR-Code'],
+    ['D','Türklingel testen'], ['A','Testalarm'], ['L','Lüften-Hinweis testen'], ['Esc','Fenster schließen']].filter(k => !(CTRL_MODE && k[0] === 'P'));
+  function toggleHelp(){
+    const m = $('helpm'); if (m.classList.contains('show')){ m.classList.remove('show'); return; }
+    const b = $('helpbox'); b.textContent = ''; b.appendChild(lel('h3', '', 'Tastenkürzel'));
+    const g = lel('div', 'kb'); KEYS.forEach(k => { g.appendChild(lel('kbd', '', k[0])); g.appendChild(lel('span', '', k[1])); }); b.appendChild(g);
+    m.classList.add('show'); wake();
+  }
+  $('helpm').addEventListener('click', () => $('helpm').classList.remove('show'));
 
   /* ---------- Gäste-WLAN (QR-Code) ---------- */
   const GW = Object.assign({ssid:'', password:'', encryption:'WPA', hidden:false, showPassword:true}, CONFIG.guestWifi || {});
@@ -1436,6 +1525,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   const WALL = !CTRL_MODE && innerWidth >= 1000;
   if (WALL){
     document.body.classList.add('wall');
+    if (rows.length <= 6) roomsEl.style.setProperty('--n', Math.max(1, rows.length));
     const cols = document.querySelectorAll('#infopg .info-cols .col');
     cols[0].append($('info').closest('section'), $('peoplecard'));
     cols[1].append($('fccard'), $('nowcard'));
@@ -1480,7 +1570,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function pageTick(){
     if (!PG.enabled || CTRL_MODE) return;
-    const busy = activeAlarms.size > 0 || Date.now() < doorUntil || dimmed || screenOff || document.body.classList.contains('stale');
+    const busy = activeAlarms.size > 0 || Date.now() < doorUntil || dimmed || screenOff || document.body.classList.contains('stale') || !$('conn').hidden;
     if (busy){ if (pageIdx) setPage(0); return; }
     if (pageIdx) renderPage();
     if (Date.now() - pageSince > pageSec()*1000) setPage(pageIdx + 1);
@@ -1516,21 +1606,33 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function chipSpecs(){
     const out = [], on = lampsOn(), open = WINS.filter(w => isOpen(w.entity)).map(w => w.name);
-    if (LAMPS.length || CONFIG.rooms.some(r => r.light)) out.push(on.length ? ['lamp on', IC.bulb, 'Licht an: ' + names(on,3)] : ['lamp', IC.bulb, 'Alle Lichter aus']);
-    if (WINS.length) out.push(WINWARN ? ['win warn', IC.win, WINWARN.why + ': Fenster offen (' + names(open,3) + ')'] : open.length ? ['win open', IC.win, 'Offen: ' + names(open,3)] : ['win closed', IC.win, 'Alles geschlossen']);
+    if (!dataReady) return out;
+    const lampIds = LAMPS.map(l => l.entity).concat(CONFIG.rooms.filter(r => r.light).map(r => r.light));
+    if (lampIds.length){
+      if (on.length) out.push(['lamp on', IC.bulb, 'Licht an: ' + names(on,3)]);
+      else if (lampIds.every(isKnown)) out.push(['lamp', IC.bulb, 'Alle Lichter aus']);   // nur, wenn wirklich alle Lampen gemeldet haben
+    }
+    if (WINS.length){
+      const unk = WINS.filter(w => (w.entity in values) && !isKnown(w.entity)).map(w => w.name);   // z. B. Sensor ausgefallen oder Batterie leer
+      if (WINWARN) out.push(['win warn', IC.win, WINWARN.why + ': Fenster offen (' + names(open,3) + ')']);
+      else if (open.length) out.push(['win open', IC.win, 'Offen: ' + names(open,3)]);
+      else if (!unk.length && WINS.some(w => w.entity in values)) out.push(['win closed', IC.win, 'Alles geschlossen']);
+      if (unk.length) out.push(['win open', IC.win, 'Ohne Status: ' + names(unk,3)]);
+    }
     const aw = awayIssues(); if (aw) out.push(['win warn', IC.user, 'Alle unterwegs: ' + aw.join(', ')]);
     const v = ventilateInfo();
     if (v.list.length){
       const l = names(v.list.map(x => x.name + ' (' + x.why + ')'), 2);
       out.push(v.ok ? ['vent', IC.air, 'Lüften empfohlen: ' + l] : ['win open', IC.air, 'Luft schlecht: ' + l + ' – draußen ' + (v.rainy ? 'Regen' : Math.round(v.out) + ' °C') + ', nur kurz lüften']);
     }
+    if (cfgMissing.length) out.push(['cfg', IC.cfg, 'Einrichtung: ' + cfgMissing.length + ' ' + (cfgMissing.length === 1 ? 'Entität' : 'Entitäten') + ' nicht gefunden (' + names(cfgMissing, 2) + ')']);
     const lp = labProblems(); if (lp.length) out.push(['win warn', IC.server, 'Homelab: ' + names(lp,3)]);
     const gt = garbageTomorrow(); if (gt) out.push(['win open', IC.bin, 'Morgen Müll: ' + gt.join(', ')]);
     const lb = lowBatteries(); if (lb.length) out.push(['win open', IC.batt, 'Batterie schwach: ' + names(lb.map(x => x.name + ' (' + x.txt + ')'), 3)]);
     return out;
   }
   const sortedChips = () => chipSpecs().map((x, i) => ({x, i})).sort((a, b) => chipPrio(a.x[0]) - chipPrio(b.x[0]) || a.i - b.i).map(o => o.x);
-  const chipPrio = c => c.indexOf('warn') >= 0 ? 0 : c === 'win open' ? 1 : c === 'vent' ? 2 : c.indexOf('lamp') === 0 ? 4 : 3;
+  const chipPrio = c => c === 'cfg' ? 3 : c.indexOf('warn') >= 0 ? 0 : c === 'win open' ? 1 : c === 'vent' ? 2 : c.indexOf('lamp') === 0 ? 4 : 3;
   function renderChips(){
     const specs = sortedChips(), sig = JSON.stringify(specs);
     if (sig === chipSig) return; chipSig = sig;
@@ -1609,7 +1711,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       const tBad = tOk && (tv < CONFIG.tempMin || tv > CONFIG.tempMax), hBad = hOk && (hv < CONFIG.humMin || hv > CONFIG.humMax);
       t.textContent = tOk ? tv.toFixed(1).replace('.',',') + '°' : '–';
       h.textContent = hOk ? Math.round(hv) + ' %' : '–';
-      fill.style.width = hOk ? Math.max(0,Math.min(100,hv)) + '%' : '0';
+      fill.style.left = hOk ? Math.max(1,Math.min(99,hv)) + '%' : '-10%'; fill.classList.toggle('out', hBad); fill.style.display = hOk ? '' : 'none';
       t.classList.toggle('bad', tBad); h.classList.toggle('bad', hBad);
       const light = isOn(r.light), mot = isOn(r.motion) || (motionUntil[r.motion] || 0) > now;
       bdL.style.display = light ? 'inline-flex' : 'none'; bdM.style.display = mot ? 'inline-flex' : 'none';
@@ -1664,10 +1766,12 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
   }
   function connect(){
     if (!CONFIG.token || CONFIG.token.indexOf('HIER_') === 0){
-      setLink('Kein Token','bad'); push('Home-Assistant-Token fehlt','w'); return;
+      setLink('Kein Token','bad'); push('Home-Assistant-Token fehlt','w'); connState = 'noToken'; renderConn(); return;
     }
     setLink('Verbinde …');
-    try { ws = new WebSocket(CONFIG.url); } catch(e){ setTimeout(connect, retry); return; }
+    if (connState !== 'failed') connState = 'connecting'; renderConn();
+    clearTimeout(connTimer); connTimer = setTimeout(() => { if (!dataReady && connState === 'connecting'){ connState = 'failed'; nextRetryAt = Date.now() + retry; renderConn(); } }, CONN_TIMEOUT);
+    try { ws = new WebSocket(CONFIG.url); } catch(e){ connState = 'failed'; nextRetryAt = Date.now() + retry; renderConn(); setTimeout(connect, retry); return; }
     ws.onmessage = ev => {
       let m; try { m = JSON.parse(ev.data); } catch(e){ return; }
       lastAlive = Date.now();
@@ -1680,10 +1784,11 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
         ws.send(JSON.stringify({id:2, type:'subscribe_events', event_type:'state_changed'}));
         requestForecast();
       } else if (m.type === 'result' && calls.has(m.id)){
-        const nm = calls.get(m.id); calls.delete(m.id);
-        if (!m.success) toast('Fehlgeschlagen', nm + ': ' + ((m.error && m.error.message) || 'Fehler'), 6000, 'bad');
+        const call = calls.get(m.id); calls.delete(m.id);
+        if (!m.success){ if (call.ent){ call.ent.busyUntil = 0; updateCtl(); } toast('Fehlgeschlagen', call.name + ': ' + ((m.error && m.error.message) || 'Fehler') + '. Bitte erneut versuchen.', 8000, 'bad'); }
+        else if (call.ent && /^(scene|script|button|input_button)\./.test(call.ent.c.entity)){ call.ent.busyUntil = 0; call.ent.done = Date.now() + 2000; updateCtl(); }
       } else if (m.type === 'auth_invalid'){
-        authFailed = true; setLink('Token ungültig','bad'); push('Token abgelehnt','a');
+        authFailed = true; connState = 'authFail'; renderConn(); setLink('Token ungültig','bad'); push('Token abgelehnt','a');
       } else if (m.type === 'result' && m.id === 1 && m.success){
         m.result.forEach(s => {
           discoverBattery(s);
@@ -1693,6 +1798,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
           if (motionIds.has(s.entity_id) && s.state === 'on') motionUntil[s.entity_id] = Date.now() + (CONFIG.motionHoldSec||20)*1000;
         });
         CONFIG.alarms.forEach(a => { if (values[a.entity] === (a.on || 'on')) alarmOn(a); });
+        dataReady = true; connState = 'online'; clearTimeout(connTimer); renderConn(); computeMissing();
         render(); infoTick();
       } else if (m.type === 'result' && m.id === fcId){
         gotForecast(m);
@@ -1727,6 +1833,7 @@ var qrcode=function(){var t=function(t,r){var e=t,n=g[r],o=null,i=0,a=null,u=[],
       if (authFailed) return;
       if (wasOnline){ wasOnline = false; push('Verbindung zu Home Assistant verloren','w'); }
       setLink('Offline','bad');
+      if (!dataReady){ connState = 'failed'; nextRetryAt = Date.now() + retry; renderConn(); }
       setTimeout(connect, retry); retry = Math.min(retry * 2, 30000);
     };
     ws.onerror = () => {};

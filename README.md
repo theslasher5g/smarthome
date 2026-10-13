@@ -163,6 +163,22 @@ Gäste öffnen die Kamera, halten sie auf den Code, tippen auf den Vorschlag und
 
 Die Erzeugung des Codes übernimmt die kleine Bibliothek *QR Code Generator for JavaScript* von Kazuhiko Arase (MIT-Lizenz), die komplett in `index.html` eingebettet ist. Es werden keine Daten ins Internet geschickt.
 
+## Was das Dashboard dir sagt, wenn etwas nicht stimmt
+
+Das Dashboard zeigt nie „alles in Ordnung“, wenn es es nicht weiß:
+
+| Situation | Anzeige |
+|---|---|
+| Daten werden noch geladen | Graue, schimmernde Platzhalter statt `–` oder `0` |
+| Kein oder falsches Token | Karte in der Mitte mit der Ursache und dem nächsten Schritt |
+| Home Assistant nicht erreichbar | Karte „Home Assistant nicht erreichbar“ mit Adresse und Countdown zum nächsten Versuch |
+| Verbindung bricht später ab | Anzeige wird abgedunkelt, oben steht „Keine Daten seit …“ |
+| Ein Fenster- oder Lampen-Sensor meldet `unavailable` (z. B. Batterie leer) | „Ohne Status: Küche“ statt „Alles geschlossen“ |
+| Eine Entity aus der Konfiguration gibt es in Home Assistant nicht | Hinweis „Einrichtung: N Entitäten nicht gefunden“, die vollständige Liste steht in der Browser-Konsole (F12) |
+| Ein Knopf am Handy wurde gedrückt | Er zeigt einen Ladering, dann „Ausgeführt ✓“ oder bei Ausbleiben der Antwort „Keine Reaktion“ |
+
+In den Raum-Karten zeigt der grüne Bereich unter der Temperatur den Komfortbereich der Luftfeuchte (`humMin` bis `humMax`), der Punkt die aktuelle Luftfeuchte. Außerhalb des Bereichs wird er rot.
+
 ## Seiten der Wanddarstellung
 
 Die **Hauptseite** zeigt nur das Wichtigste: Räume mit Temperatur, den Grundriss mit Lampen und Fenstern, höchstens drei Hinweiszeilen (Warnungen zuerst) und unten eine Zeile mit Personen, Wetter und dem, was gerade läuft. Alles andere wechselt automatisch durch:
@@ -201,7 +217,8 @@ Zum Ausprobieren hängst du die Uhrzeit an die Adresse an, z. B. `index.html?tim
 | `L` | Lüften-Hinweis testen |
 | `P` | Nächste Seite: Hauptseite, ruhige Ansicht, Übersicht, Homelab |
 | `W` | Gäste-WLAN-QR-Code groß im Vollbild (schließt nach 60 Sekunden oder mit `Esc`) |
-| `Esc` | Klingel-Anzeige schließen |
+| `?` oder `H` | Alle Tastenkürzel anzeigen |
+| `Esc` | Klingel-Anzeige, Gäste-WLAN oder Hilfe schließen |
 
 ## Anwesenheit und Display aus
 
@@ -293,6 +310,7 @@ Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options �
 | Kein Klingel-Kamerabild | `pi-stats.py` mit `HA_URL` und `HA_TOKEN` starten, `doorbell.camera` prüfen |
 | Wetter-Vorschau bleibt leer | Die Wetter-Entity muss `weather.get_forecasts` unterstützen (stündlich oder täglich), `weather.entity` muss gesetzt sein |
 | Batterie fehlt in der Warnung | Der Sensor hat keine Geräteklasse `battery`: bei `battery.extra` von Hand eintragen. Wird er ausgeblendet, prüfe `exclude` |
+| „Einrichtung: N Entitäten nicht gefunden“ | Entity-IDs in `index.html` mit Einstellungen → Entitäten in Home Assistant vergleichen. Die komplette Liste steht in der Browser-Konsole (F12) |
 | „Keine Daten seit …“ | Home Assistant antwortet nicht mehr: Adresse, Netzwerk und Token prüfen. Die Seite verbindet sich selbst neu |
 | Steuerung fehlt am Handy | Die Seite mit `?control` öffnen und prüfen, ob `controls` Einträge hat |
 | Homelab zeigt `–` | Entity-IDs in `homelab` prüfen. Die Seite warnt „offline“ nur, wenn Home Assistant `unavailable` meldet |
