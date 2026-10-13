@@ -1,0 +1,118 @@
+! =====================================================================
+!  MUSTER (ungetestet): 4 Netze auf einem Cisco-Layer-3-Switch (IOS)
+!  Befehle und Schnittstellennamen je nach Modell anpassen (Catalyst,
+!  9200/9300, Small-Business-Reihe wie SG350 haben andere Syntax).
+!  Vorher ein Backup der laufenden Konfiguration machen: copy running-config tftp:...
+!
+!  Annahmen:
+!    VLAN 10  PRIVAT    192.168.10.0/24   PC, Laptop, Handy
+!    VLAN 20  IOT       192.168.20.0/24   Home Assistant (Raspberry Pi), Wand-Display, Smart-Home-Geräte
+!    VLAN 30  HOMELAB   192.168.30.0/24   3x Proxmox, Synology
+!    VLAN 40  GAESTE    192.168.40.0/24   Gäste-WLAN
+!    Home Assistant:    192.168.20.10  (feste Adresse / DHCP-Reservierung)
+!    Router/Firewall:   192.168.1.1 (liegt in einem eigenen Transfernetz, siehe README)
+! =====================================================================
+
+ip routing
+
+vlan 10
+ name PRIVAT
+vlan 20
+ name IOT
+vlan 30
+ name HOMELAB
+vlan 40
+ name GAESTE
+
+! ---------- Gateway-Adressen pro Netz ----------
+interface Vlan10
+ ip address 192.168.10.1 255.255.255.0
+ ip access-group ACL-PRIVAT in
+interface Vlan20
+ ip address 192.168.20.1 255.255.255.0
+ ip access-group ACL-IOT in
+interface Vlan30
+ ip address 192.168.30.1 255.255.255.0
+ ip access-group ACL-HOMELAB in
+interface Vlan40
+ ip address 192.168.40.1 255.255.255.0
+ ip access-group ACL-GAESTE in
+
+! ---------- DHCP (kann auch der Router übernehmen) ----------
+ip dhcp excluded-address 192.168.10.1 192.168.10.99
+ip dhcp excluded-address 192.168.20.1 192.168.20.99
+ip dhcp excluded-address 192.168.30.1 192.168.30.99
+ip dhcp excluded-address 192.168.40.1 192.168.40.9
+ip dhcp pool PRIVAT
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.1
+ dns-server 192.168.20.10
+ip dhcp pool IOT
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.1
+ dns-server 192.168.20.10
+ip dhcp pool GAESTE
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.1
+ dns-server 1.1.1.1 9.9.9.9
+! Homelab: feste Adressen (Proxmox .11 bis .13, Synology .20), daher kein DHCP-Pool nötig
+
+! ---------- Regeln (ACLs, wirken auf Verkehr, der aus dem jeweiligen Netz kommt) ----------
+
+! Gäste: nur Internet, nichts im Haus
+ip access-list extended ACL-GAESTE
+ remark Kein Zugriff auf irgendein internes Netz
+ deny   ip any 192.168.0.0 0.0.255.255
+ deny   ip any 10.0.0.0 0.255.255.255
+ deny   ip any 172.16.0.0 0.15.255.255
+ permit ip any any
+
+! Privat: darf alles ausser in die Gäste
+ip access-list extended ACL-PRIVAT
+ deny   ip any 192.168.40.0 0.0.0.255
+ permit ip any any
+
+! IoT (hier liegt Home Assistant): Antworten, dazu gezielt ins Homelab, sonst nur Internet
+ip access-list extended ACL-IOT
+ remark Antworten auf Verbindungen, die aus Privat oder Homelab kamen
+ permit tcp any 192.168.10.0 0.0.0.255 established
+ permit tcp any 192.168.30.0 0.0.0.255 established
+ remark Home Assistant darf ins Homelab, aber nur diese Ports
+ permit tcp host 192.168.20.10 192.168.30.0 0.0.0.255 eq 8006
+ permit tcp host 192.168.20.10 192.168.30.0 0.0.0.255 eq 5001
+ permit tcp host 192.168.20.10 192.168.30.0 0.0.0.255 eq 61208
+ permit tcp host 192.168.20.10 192.168.30.0 0.0.0.255 eq 3493
+ permit icmp host 192.168.20.10 192.168.30.0 0.0.0.255
+ remark Sonst nichts in die anderen internen Netze
+ deny   ip any 192.168.10.0 0.0.0.255
+ deny   ip any 192.168.30.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ permit ip any any
+
+! Homelab: Antworten an Privat und IoT, Internet erlaubt, sonst nichts nach innen
+ip access-list extended ACL-HOMELAB
+ permit tcp any 192.168.10.0 0.0.0.255 established
+ permit tcp any 192.168.20.0 0.0.0.255 established
+ deny   ip any 192.168.10.0 0.0.0.255
+ deny   ip any 192.168.20.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ permit ip any any
+
+! ---------- Weg ins Internet ----------
+ip route 0.0.0.0 0.0.0.0 192.168.1.1
+
+! ---------- Beispiel für Ports ----------
+! interface GigabitEthernet1/0/1        ! PC
+!  switchport mode access
+!  switchport access vlan 10
+! interface GigabitEthernet1/0/10       ! Proxmox (mehrere VLANs als Trunk)
+!  switchport trunk encapsulation dot1q
+!  switchport mode trunk
+!  switchport trunk allowed vlan 20,30
+! interface GigabitEthernet1/0/20       ! WLAN-Zugangspunkt (SSIDs auf VLAN 10, 20, 40)
+!  switchport trunk encapsulation dot1q
+!  switchport mode trunk
+!  switchport trunk allowed vlan 10,20,40
+
+! ---------- SNMP (für die Anzeige im Dashboard, nur lesend) ----------
+! snmp-server community <langes-geheimes-wort> RO

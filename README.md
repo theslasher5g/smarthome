@@ -259,6 +259,12 @@ Exec=chromium-browser --kiosk --noerrdialogs --disable-infobars --check-for-upda
 
 Bildschirm-Abschaltung verhinderst du in `raspi-config` unter *Display Options → Screen Blanking*.
 
+## Weitere Ordner
+
+| Ordner | Inhalt |
+|---|---|
+| [`netzwerk/`](netzwerk/README.md) | Aufteilung in 4 Netze (Privat, IoT, Homelab, Gäste) mit einem Cisco-Layer-3-Switch, inklusive Konfigurationsmuster |
+
 ## Fehlersuche
 
 | Problem | Lösung |
